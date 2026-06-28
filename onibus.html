@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ônibus Franco da Rocha</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f1117;
+    color: #f0f0f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 40px;
+  }
+
+  .topo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .hora-atual {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    color: #ffffff;
+    line-height: 1;
+  }
+
+  .dia-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 6px;
+  }
+
+  .card {
+    background: #1c1f2a;
+    border-radius: 20px;
+    padding: 22px 20px;
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 16px;
+    border: 1px solid #2a2d3a;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .numero {
+    background: #2563eb;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .numero.n240 {
+    background: #7c3aed;
+  }
+
+  .destino {
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .horarios {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .horario-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .horario-item:first-child .hora {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .horario-item:first-child .mins {
+    font-size: 13px;
+    color: #4ade80;
+    font-weight: 600;
+  }
+
+  .hora {
+    font-size: 24px;
+    font-weight: 600;
+    color: #9ca3af;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+  }
+
+  .mins {
+    font-size: 12px;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .divider {
+    height: 1px;
+    background: #2a2d3a;
+    margin: 4px 0;
+  }
+
+  .sem-horarios {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  .atualizar {
+    margin-top: 8px;
+    background: none;
+    border: 1px solid #2a2d3a;
+    color: #555;
+    font-size: 12px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+
+  .atualizar:active {
+    background: #1c1f2a;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div class="hora-atual" id="horaAtual">--:--</div>
+  <div class="dia-label" id="diaLabel">carregando...</div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="numero">210</span>
+    <span class="destino">Pq. Vitória – V. Ramos</span>
+  </div>
+  <div class="horarios" id="h210"></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="numero n240">240</span>
+    <span class="destino">Monte Verde (Circular)</span>
+  </div>
+  <div class="horarios" id="h240"></div>
+</div>
+
+<button class="atualizar" onclick="atualizar()">↻ atualizar</button>
+
+<script>
+var h210u = ["04:05","04:25","04:45","05:05","05:25","05:47","06:10","06:35","07:01","07:27","07:53","08:21","09:10","10:02","10:50","11:15","11:40","12:05","12:30","12:55","13:20","13:45","14:10","14:35","15:00","15:25","15:50","16:15","16:33","16:51","17:10","17:28","17:46","18:05","18:23","18:41","19:00","19:18","19:36","19:55","20:15","20:45","21:20","21:55","22:10","22:25","22:40","23:00","23:10","23:35","00:05","00:35","01:10"];
+var h210s = ["04:05","04:25","04:45","05:05","05:25","05:45","06:05","06:27","06:50","07:12","07:35","07:57","08:20","08:45","09:22","10:00","10:42","11:10","11:35","12:00","12:25","12:50","13:15","13:40","14:05","14:30","14:55","15:20","15:45","16:10","16:35","17:00","17:25","17:50","18:15","18:40","19:05","19:30","19:55","20:30","21:10","21:50","22:15","22:35","22:55","23:15","23:35","00:00","00:30","01:00"];
+var h210d = ["04:10","04:50","05:30","06:10","06:55","07:42","08:30","09:18","10:00","10:25","10:48","11:10","11:33","11:55","12:18","12:40","13:03","13:25","13:48","14:10","14:33","14:55","15:18","15:40","16:03","16:25","16:48","17:10","17:33","17:55","18:18","18:43","19:20","20:00","20:40","21:03","21:25","21:48","22:33","23:18","00:05","00:55"];
+
+var h240u = ["04:00","04:25","04:45","04:56","05:07","05:17","05:27","05:38","05:46","05:54","06:02","06:10","06:18","06:26","06:35","06:44","06:53","07:02","07:11","07:20","07:29","07:38","07:47","07:56","08:05","08:15","08:25","08:37","08:50","09:05","09:21","09:37","09:53","10:10","10:27","10:44","10:57","11:09","11:20","11:31","11:42","11:53","12:04","12:16","12:27","12:39","12:50","13:02","13:15","13:30","13:45","13:57","14:09","14:20","14:30","14:40","14:50","15:00","15:10","15:20","15:30","15:40","15:50","16:00","16:10","16:20","16:30","16:41","16:51","17:02","17:12","17:23","17:33","17:44","17:54","18:05","18:15","18:25","18:35","18:45","18:55","19:05","19:15","19:25","19:35","19:45","19:57","20:10","20:25","20:40","20:56","21:13","21:30","21:47","22:02","22:15","22:28","22:41","22:53","23:05","23:17","23:30","23:43","23:55","00:10","00:25","00:40","01:00"];
+var h240s = ["04:00","04:25","04:41","04:55","05:09","05:23","05:37","05:52","06:06","06:20","06:35","06:50","07:04","07:19","07:34","07:48","08:03","08:20","08:37","08:54","09:12","09:35","10:00","10:25","10:53","11:21","11:50","12:09","12:27","12:45","13:02","13:19","13:32","13:44","13:56","14:08","14:20","14:32","14:44","14:57","15:09","15:21","15:33","15:46","15:58","16:10","16:22","16:35","16:49","17:02","17:16","17:29","17:43","17:57","18:11","18:25","18:43","19:08","19:32","19:56","20:20","20:44","21:05","21:25","21:46","22:10","22:33","22:57","23:20","23:40","00:00","00:25","01:00"];
+var h240d = ["04:25","04:46","05:07","05:28","05:49","06:10","06:32","06:54","07:16","07:38","08:00","08:25","09:00","09:38","10:16","10:54","11:18","11:41","11:57","12:12","12:28","12:44","12:59","13:14","13:30","13:45","14:00","14:16","14:31","14:46","15:02","15:17","15:32","15:48","16:03","16:18","16:34","16:49","17:05","17:21","17:36","17:52","18:10","18:35","19:12","19:50","20:20","20:50","21:20","21:50","22:20","22:50","23:20","00:00","00:50"];
+
+function toMin(t) {
+  var p = t.split(":").map(Number);
+  return p[0] * 60 + p[1];
+}
+
+function minParaTexto(diff) {
+  if (diff < 1) return "agora";
+  if (diff === 1) return "1 min";
+  if (diff < 60) return diff + " min";
+  var h = Math.floor(diff / 60);
+  var m = diff % 60;
+  return h + "h" + (m > 0 ? (m < 10 ? "0" : "") + m : "");
+}
+
+function renderHorarios(lista, elId, nowMin) {
+  var futuros = lista.filter(function(t) { return toMin(t) > nowMin; }).slice(0, 3);
+  var el = document.getElementById(elId);
+  el.innerHTML = "";
+
+  if (futuros.length === 0) {
+    el.innerHTML = '<div class="sem-horarios">Sem mais horários hoje</div>';
+    return;
+  }
+
+  futuros.forEach(function(t, i) {
+    var diff = toMin(t) - nowMin;
+    var div = document.createElement("div");
+    div.className = "horario-item";
+    div.innerHTML = '<span class="hora">' + t + '</span><span class="mins">' + minParaTexto(diff) + '</span>';
+    el.appendChild(div);
+    if (i < futuros.length - 1) {
+      var divider = document.createElement("div");
+      divider.className = "divider";
+      el.appendChild(divider);
+    }
+  });
+}
+
+function atualizar() {
+  var now = new Date();
+  var day = now.getDay();
+  var h = now.getHours();
+  var m = now.getMinutes();
+  var nowMin = h * 60 + m;
+
+  var hStr = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  document.getElementById("horaAtual").textContent = hStr;
+
+  var dias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  var tipos = ["Domingo / Feriado","Dia Útil","Dia Útil","Dia Útil","Dia Útil","Dia Útil","Sábado"];
+  document.getElementById("diaLabel").textContent = dias[day] + " · " + tipos[day];
+
+  var lista210, lista240;
+  if (day === 0) { lista210 = h210d; lista240 = h240d; }
+  else if (day === 6) { lista210 = h210s; lista240 = h240s; }
+  else { lista210 = h210u; lista240 = h240u; }
+
+  renderHorarios(lista210, "h210", nowMin);
+  renderHorarios(lista240, "h240", nowMin);
+}
+
+atualizar();
+setInterval(atualizar, 30000);
+</script>
+</body>
+</html>
