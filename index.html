@@ -3,247 +3,1001 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Ônibus Franco da Rocha</title>
+<meta name="theme-color" content="#07090f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TransFranco">
+<title>TransFranco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --bg:           #07090f;
+  --surface:      #11131a;
+  --surface-el:   #171b25;
+  --surface-hi:   #1e2333;
 
-  body {
-    background: #0f1117;
-    color: #f0f0f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 20px 40px;
-  }
+  /* Text */
+  --text:         #f0f2fa;
+  --text-sec:     #9ca3af;
+  --text-ter:     #4b5263;
 
-  .topo {
-    text-align: center;
-    margin-bottom: 28px;
-  }
+  /* Accent */
+  --a210:         #3b82f6;
+  --a210-glow:    rgba(59,130,246,.2);
+  --a210-dim:     rgba(59,130,246,.12);
+  --a240:         #8b5cf6;
+  --a240-glow:    rgba(139,92,246,.2);
+  --a240-dim:     rgba(139,92,246,.12);
 
-  .hora-atual {
-    font-size: 52px;
-    font-weight: 700;
-    letter-spacing: -2px;
-    color: #ffffff;
-    line-height: 1;
-  }
+  /* Semantic */
+  --success:      #22c55e;
+  --warning:      #eab308;
+  --danger:       #ef4444;
+  --info:         #f97316;
 
-  .dia-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-top: 6px;
-  }
+  /* Borders & shadows */
+  --border:       rgba(255,255,255,.08);
+  --border-hi:    rgba(255,255,255,.15);
+  --shadow:       0 1px 3px rgba(0,0,0,.2);
+  --shadow-lg:    0 2px 8px rgba(0,0,0,.25);
 
-  .card {
-    background: #1c1f2a;
-    border-radius: 20px;
-    padding: 22px 20px;
-    width: 100%;
-    max-width: 380px;
-    margin-bottom: 16px;
-    border: 1px solid #2a2d3a;
-  }
+  /* Layout */
+  --nav-h:        calc(56px + env(safe-area-inset-top, 0px));
+  --tab-h:        calc(64px + env(safe-area-inset-bottom, 0px));
+  --radius-sm:    10px;
+  --radius:       16px;
+  --radius-lg:    22px;
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
+  /* Type scale */
+  --t-xs:  12px;
+  --t-sm:  13px;
+  --t-md:  14px;
+  --t-base:16px;
+  --t-lg:  19px;
+  --t-xl:  26px;
+  --t-2xl: 34px;
+  --t-3xl: 40px;
+}
 
-  .numero {
-    background: #2563eb;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
-  }
+/* ═══════════════════════════════════════
+   RESET
+═══════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; overflow-x:hidden; }
+button { border:none; background:none; font-family:inherit; cursor:pointer; color:inherit; }
+input  { font-family:inherit; }
+::-webkit-scrollbar { width:0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
 
-  .numero.n240 {
-    background: #7c3aed;
-  }
+/* ═══════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════ */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:var(--nav-h);
+  padding-top:env(safe-area-inset-top, 0px);
+  background:rgba(7,9,15,.9);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:flex-end; justify-content:space-between;
+  padding-left:20px; padding-right:20px; padding-bottom:12px;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-icon {
+  width:30px; height:30px; border-radius:9px;
+  background:linear-gradient(135deg,var(--a210),var(--a240));
+  display:flex; align-items:center; justify-content:center;
+}
+.brand-icon svg { width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; }
+.brand-name { font-size:var(--t-base); font-weight:700; letter-spacing:-.3px; }
+.brand-city { font-size:var(--t-xs); color:var(--text-sec); margin-top:1px; }
+.topbar-clock { text-align:right; }
+.clock-time { font-size:var(--t-lg); font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+.clock-day  { font-size:var(--t-xs); color:var(--text-sec); margin-top:1px; }
 
-  .destino {
-    font-size: 13px;
-    color: #888;
-    font-weight: 500;
-  }
+/* ═══════════════════════════════════════
+   TABBAR
+═══════════════════════════════════════ */
+.tabbar {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  height:var(--tab-h);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+  background:rgba(7,9,15,.94);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex;
+}
+.tab {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; color:var(--text-ter); transition:color .15s; padding-bottom:2px;
+}
+.tab.active { color:var(--a210); }
+.tab svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.tab-lbl { font-size:var(--t-xs); font-weight:500; letter-spacing:.3px; }
 
-  .horarios {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+/* ═══════════════════════════════════════
+   PAGES
+═══════════════════════════════════════ */
+.page {
+  display:none;
+  padding-top:var(--nav-h);
+  padding-bottom:var(--tab-h);
+  min-height:100vh;
+}
+.page.active { display:block; animation:pageIn .2s ease; will-change:transform,opacity; }
+@keyframes pageIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-  .horario-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+/* ═══════════════════════════════════════
+   HOME — SENTIDO TOGGLE
+═══════════════════════════════════════ */
+.sentido-wrap { padding:14px 16px 0; }
+.sentido-toggle {
+  display:flex; background:var(--surface); border-radius:var(--radius-sm);
+  padding:3px; position:relative; border:1px solid var(--border);
+}
+.sentido-slider {
+  position:absolute; top:3px; bottom:3px; width:calc(50% - 3px);
+  background:var(--surface-el); border-radius:8px;
+  border:1px solid var(--border-hi);
+  transform:translateX(0);
+  transition:transform .25s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+  left:3px;
+}
+.sentido-slider.right { transform:translateX(100%); }
+.sentido-btn {
+  flex:1; padding:9px 10px; border-radius:8px;
+  font-size:var(--t-sm); font-weight:600;
+  color:var(--text-ter); display:flex; align-items:center; justify-content:center;
+  gap:6px; position:relative; z-index:1; transition:color .2s;
+}
+.sentido-btn svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+.sentido-btn.active { color:var(--text); }
 
-  .horario-item:first-child .hora {
-    font-size: 32px;
-    font-weight: 700;
-    color: #ffffff;
-  }
+/* ═══════════════════════════════════════
+   HOME — HERO CARD (a única coisa que importa AGORA)
+═══════════════════════════════════════ */
+.hero-wrap { padding:14px 16px 0; }
 
-  .horario-item:first-child .mins {
-    font-size: 13px;
-    color: #4ade80;
-    font-weight: 600;
-  }
+.hero-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  position:relative;
+  transition:transform .12s;
+  will-change:transform;
+}
+.hero-card:active { transform:scale(.99); }
+.hero-card.hero-urgent { border-color:rgba(239,68,68,.45); box-shadow:0 0 0 1px rgba(239,68,68,.25), var(--shadow-lg); }
 
-  .hora {
-    font-size: 24px;
-    font-weight: 600;
-    color: #9ca3af;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-  }
+.hero-accent { height:3px; width:100%; }
 
-  .mins {
-    font-size: 12px;
-    color: #555;
-    font-weight: 500;
-  }
+.hero-body { padding:18px 18px 16px; }
 
-  .divider {
-    height: 1px;
-    background: #2a2d3a;
-    margin: 4px 0;
-  }
+/* Linha 1: onde você está + estado do trânsito — pequeno, de apoio */
+.hero-status { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+.hero-live { display:flex; align-items:center; gap:7px; min-width:0; }
+.live-dot { width:7px; height:7px; border-radius:50%; background:var(--success); flex-shrink:0; box-shadow:0 0 0 3px rgba(34,197,94,.15); }
+.hero-ponto { font-size:11px; font-weight:600; color:var(--text-sec); text-transform:uppercase; letter-spacing:.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pico-chip { display:flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; }
+.chip-normal { background:var(--surface-el); color:var(--text-ter); }
+.chip-pico   { background:rgba(234,179,8,.14); color:var(--warning); }
+.chip-sexta  { background:rgba(249,115,22,.14); color:var(--info); }
 
-  .sem-horarios {
-    font-size: 14px;
-    color: #555;
-    text-align: center;
-    padding: 10px 0;
-  }
+.hero-linha-badge { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.8px; color:#fff; padding:3px 9px; border-radius:6px; margin-bottom:10px; }
 
-  .atualizar {
-    margin-top: 8px;
-    background: none;
-    border: 1px solid #2a2d3a;
-    color: #555;
-    font-size: 12px;
-    padding: 8px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-family: inherit;
-    letter-spacing: 0.5px;
-  }
+/* A ÚNICA coisa grande na tela: o que fazer agora */
+.hero-action { font-size:var(--t-3xl); font-weight:800; letter-spacing:-1.2px; line-height:1.05; margin-bottom:12px; color:var(--text); display:flex; align-items:center; gap:10px; }
+.hero-urgent-dot { width:11px; height:11px; border-radius:50%; background:var(--danger); flex-shrink:0; }
 
-  .atualizar:active {
-    background: #1c1f2a;
-    color: #888;
-  }
+/* Informações de apoio — sempre visíveis mas discretas, uma por linha */
+.hero-info-row { font-size:var(--t-base); color:var(--text-sec); margin-bottom:5px; font-weight:500; }
+.hero-info-row b { color:var(--text); font-weight:700; }
+.hero-meta-row { font-size:var(--t-xs); color:var(--text-ter); margin-top:8px; }
+
+.hero-progress { height:4px; background:var(--surface-el); border-radius:3px; margin-top:14px; overflow:hidden; }
+.hero-progress-bar { height:100%; width:100%; transform-origin:left; border-radius:3px; transition:transform .4s ease; }
+
+/* ═══════════════════════════════════════
+   HOME — TIMELINE (a viagem inteira, passo a passo = macro)
+═══════════════════════════════════════ */
+.timeline-wrap { padding:16px 16px 0; }
+.timeline-title {
+  font-size:10px; font-weight:700; color:var(--text-ter);
+  text-transform:uppercase; letter-spacing:1.8px; margin-bottom:12px;
+}
+.timeline {
+  display:flex; flex-direction:column; gap:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.tl-item {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  transition:opacity .2s;
+}
+.tl-item:last-child { border-bottom:none; }
+.tl-item.tl-future { opacity:.45; }
+.tl-icon-wrap {
+  width:26px; height:26px; border-radius:8px;
+  background:var(--surface-el);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.tl-icon-wrap svg { width:12px; height:12px; fill:none; stroke:var(--text-ter); stroke-width:1.8; stroke-linecap:round; }
+.tl-icon-wrap.active-icon { background:var(--a210); }
+.tl-icon-wrap.active-icon svg { stroke:#fff; }
+.tl-content { flex:1; min-width:0; }
+.tl-label { font-size:10px; color:var(--text-ter); font-weight:600; text-transform:uppercase; letter-spacing:.8px; margin-bottom:2px; }
+.tl-value { font-size:var(--t-sm); font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tl-value.sec { color:var(--text-sec); font-weight:500; }
+.tl-time {
+  font-size:var(--t-md); font-weight:700;
+  font-variant-numeric:tabular-nums; letter-spacing:-.3px;
+  color:var(--text-sec); flex-shrink:0;
+}
+.tl-item:not(.tl-future) .tl-time { color:var(--text); }
+
+/* ═══════════════════════════════════════
+   HOME — PRÓXIMOS ÔNIBUS (alternativas, só se precisar)
+═══════════════════════════════════════ */
+.alts-wrap { padding:16px 16px 0; }
+.alts-title {
+  font-size:10px; font-weight:700; color:var(--text-ter);
+  text-transform:uppercase; letter-spacing:1.8px; margin-bottom:10px;
+}
+.alts-list { display:flex; flex-direction:column; gap:8px; }
+
+.alt-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:var(--shadow); cursor:pointer; transition:transform .1s;
+  will-change:transform;
+}
+.alt-card:active { transform:scale(.98); }
+.alt-badge {
+  font-size:var(--t-xs); font-weight:700;
+  width:38px; height:24px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent; border:1px solid currentColor; flex-shrink:0;
+}
+.b210 { color:var(--a210); }
+.b240 { color:var(--a240); }
+
+.alt-info { flex:1; min-width:0; }
+.alt-horario { font-size:var(--t-base); font-weight:700; font-variant-numeric:tabular-nums; }
+.alt-detalhe { font-size:var(--t-xs); color:var(--text-ter); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.alt-falta { font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+.falta-agora  { background:rgba(239,68,68,.15); color:var(--danger); }
+.falta-breve  { background:rgba(234,179,8,.15); color:var(--warning); }
+.falta-normal { background:var(--surface-el); color:var(--text-sec); }
+
+/* ═══════════════════════════════════════
+   PAGE HORÁRIOS
+═══════════════════════════════════════ */
+.hr-controls { padding:14px 16px 0; }
+.linha-tabs  { display:flex; gap:6px; margin-bottom:10px; }
+.ltab {
+  flex:1; padding:9px; border-radius:var(--radius-sm);
+  font-size:var(--t-base); font-weight:700;
+  color:var(--text-sec); background:var(--surface);
+  border:1px solid var(--border);
+  transition:all .15s;
+}
+.ltab.a210 { background:var(--a210); color:#fff; border-color:var(--a210); }
+.ltab.a240 { background:var(--a240); color:#fff; border-color:var(--a240); }
+
+.turno-tabs { display:flex; gap:6px; margin-bottom:12px; }
+.ttab {
+  padding:6px 14px; border-radius:20px;
+  font-size:var(--t-sm); font-weight:600;
+  color:var(--text-ter); background:var(--surface);
+  border:1px solid var(--border);
+  transition:all .15s;
+}
+.ttab.active { background:var(--surface-el); color:var(--text); border-color:var(--border-hi); }
+
+.search-wrap { position:relative; margin-bottom:14px; }
+.search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px; height:15px; fill:none; stroke:var(--text-ter); stroke-width:2; stroke-linecap:round; }
+.search-input {
+  width:100%; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:10px 12px 10px 36px;
+  color:var(--text); font-size:var(--t-md); font-weight:500; outline:none;
+  transition:border-color .15s;
+}
+.search-input::placeholder { color:var(--text-ter); }
+.search-input:focus { border-color:var(--a210); }
+
+.grade { padding:0 16px 16px; }
+.grade-periodo { margin-bottom:14px; }
+.grade-periodo-title {
+  font-size:9px; font-weight:700; color:var(--text-ter);
+  text-transform:uppercase; letter-spacing:1.8px;
+  padding:10px 0 8px; border-bottom:1px solid var(--border); margin-bottom:10px;
+}
+.grade-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip {
+  padding:7px 13px; border-radius:9px;
+  font-size:var(--t-md); font-weight:600;
+  color:var(--text-sec); background:var(--surface);
+  border:1px solid var(--border);
+  font-variant-numeric:tabular-nums; transition:all .15s;
+}
+.chip.passado   { opacity:.22; }
+.chip.proximo   { color:#fff; }
+.chip.prx-210   { background:var(--a210); border-color:var(--a210); box-shadow:0 0 12px var(--a210-glow); }
+.chip.prx-240   { background:var(--a240); border-color:var(--a240); box-shadow:0 0 12px var(--a240-glow); }
+.chip.highlight { background:var(--surface-el); color:var(--text); border-color:var(--border-hi); }
+.no-results { font-size:var(--t-md); color:var(--text-ter); padding:20px 0; text-align:center; }
+
+/* ═══════════════════════════════════════
+   PAGE LINHAS
+═══════════════════════════════════════ */
+.linhas-wrap { padding:16px; }
+.lcard {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow); margin-bottom:12px;
+}
+.lcard-head { padding:18px; background:var(--surface-el); border-bottom:1px solid var(--border); }
+.lcard-top { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.lcard-num {
+  width:52px; height:52px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#fff; flex-shrink:0;
+}
+.n210 { background:linear-gradient(135deg,var(--a210),#1d4ed8); }
+.n240 { background:linear-gradient(135deg,var(--a240),#6d28d9); }
+.lcard-title { font-size:var(--t-lg); font-weight:700; letter-spacing:-.3px; }
+.lcard-sub   { font-size:var(--t-xs); color:var(--text-sec); margin-top:2px; }
+.lcard-rota  { background:var(--surface-hi); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:8px; }
+.rp          { flex:1; }
+.rp-lbl      { font-size:9px; color:var(--text-ter); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:2px; }
+.rp-val      { font-size:var(--t-xs); color:var(--text-sec); line-height:1.3; }
+.rp-arrow svg{ width:14px; height:14px; fill:none; stroke:var(--text-ter); stroke-width:2; stroke-linecap:round; }
+
+.lcard-stats { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--border); }
+.stat        { padding:14px 16px; border-right:1px solid var(--border); }
+.stat:last-child { border-right:none; }
+.stat-lbl    { font-size:9px; color:var(--text-ter); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:4px; }
+.stat-val    { font-size:var(--t-xl); font-weight:800; }
+.stat-sub    { font-size:9px; color:var(--text-ter); margin-top:2px; }
+
+.lcard-directions { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px 16px; border-bottom:1px solid var(--border); }
+.ldir-card { background:var(--surface-hi); border-radius:var(--radius-sm); padding:12px 13px; }
+.ldir-label { display:flex; align-items:center; gap:5px; font-size:9px; font-weight:700; color:var(--text-ter); text-transform:uppercase; letter-spacing:.7px; margin-bottom:8px; }
+.ldir-label svg { width:11px; height:11px; fill:none; stroke:var(--text-ter); stroke-width:2; stroke-linecap:round; }
+.ldir-time { font-size:var(--t-lg); font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; margin-bottom:5px; }
+.ldir-sub { font-size:10px; color:var(--text-sec); margin-bottom:8px; line-height:1.4; }
+.ldir-pill { display:inline-block; font-size:10px; font-weight:700; padding:4px 9px; border-radius:20px; }
+.ldir-empty { font-size:var(--t-xs); color:var(--text-ter); padding:2px 0 6px; }
+
+.lcard-infos { }
+.info-row    { display:flex; align-items:flex-start; gap:12px; padding:11px 16px; border-bottom:1px solid var(--border); }
+.info-row:last-child { border-bottom:none; }
+.info-icon   { width:28px; height:28px; border-radius:8px; background:var(--surface-el); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.info-icon svg { width:14px; height:14px; fill:none; stroke:var(--text-sec); stroke-width:1.8; stroke-linecap:round; }
+.info-text   { font-size:var(--t-sm); color:var(--text-sec); line-height:1.55; }
+.info-text b { color:var(--text); font-weight:600; }
 </style>
 </head>
 <body>
 
-<div class="topo">
-  <div class="hora-atual" id="horaAtual">--:--</div>
-  <div class="dia-label" id="diaLabel">carregando...</div>
-</div>
-
-<div class="card">
-  <div class="card-header">
-    <span class="numero">210</span>
-    <span class="destino">Pq. Vitória – V. Ramos</span>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">TransFranco</div>
+      <div class="brand-city">Franco da Rocha · SP</div>
+    </div>
   </div>
-  <div class="horarios" id="h210"></div>
-</div>
-
-<div class="card">
-  <div class="card-header">
-    <span class="numero n240">240</span>
-    <span class="destino">Monte Verde (Circular)</span>
+  <div class="topbar-clock">
+    <div class="clock-time" id="clockTime">--:--</div>
+    <div class="clock-day"  id="clockDay">—</div>
   </div>
-  <div class="horarios" id="h240"></div>
+</header>
+
+<!-- PAGE: INÍCIO -->
+<div class="page active" id="page-inicio">
+
+  <!-- Toggle sentido -->
+  <div class="sentido-wrap">
+    <div class="sentido-toggle">
+      <div class="sentido-slider" id="sentidoSlider"></div>
+      <button class="sentido-btn active" id="btnEst" onclick="setSentido('estacao')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg>
+        Estação → Casa
+      </button>
+      <button class="sentido-btn" id="btnCasa" onclick="setSentido('casa')">
+        <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+        Casa → Estação
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero: MICRO — só o que fazer agora -->
+  <div class="hero-wrap" id="heroWrap"></div>
+
+  <!-- Timeline: MACRO — a viagem inteira, passo a passo -->
+  <div class="timeline-wrap" id="timelineWrap"></div>
+
+  <!-- Alternativas -->
+  <div class="alts-wrap" id="altsWrap"></div>
+
 </div>
 
-<button class="atualizar" onclick="atualizar()">↻ atualizar</button>
+<!-- PAGE: HORÁRIOS -->
+<div class="page" id="page-horarios">
+  <div class="hr-controls">
+    <div class="linha-tabs">
+      <button class="ltab a210" id="ltab210" onclick="selecionarLinha(210)">Linha 210</button>
+      <button class="ltab"     id="ltab240" onclick="selecionarLinha(240)">Linha 240</button>
+    </div>
+    <div class="turno-tabs">
+      <button class="ttab active" id="tutil" onclick="selecionarTurno('util')">Dias úteis</button>
+      <button class="ttab"        id="tsab"  onclick="selecionarTurno('sab')">Sábado</button>
+      <button class="ttab"        id="tdom"  onclick="selecionarTurno('dom')">Dom / Fer.</button>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" type="text" inputmode="numeric" placeholder="Buscar horário  ex: 08" oninput="renderGrade()">
+    </div>
+  </div>
+  <div class="grade" id="grade"></div>
+</div>
+
+<!-- PAGE: LINHAS -->
+<div class="page" id="page-linhas">
+  <div class="linhas-wrap" id="linhasWrap"></div>
+</div>
+
+<!-- TABBAR -->
+<nav class="tabbar">
+  <button class="tab active" id="tab-inicio"   onclick="goPage('inicio')">
+    <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+    <span class="tab-lbl">Início</span>
+  </button>
+  <button class="tab" id="tab-horarios" onclick="goPage('horarios')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span class="tab-lbl">Horários</span>
+  </button>
+  <button class="tab" id="tab-linhas" onclick="goPage('linhas')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+    <span class="tab-lbl">Linhas</span>
+  </button>
+</nav>
 
 <script>
-var h210u = ["04:05","04:25","04:45","05:05","05:25","05:47","06:10","06:35","07:01","07:27","07:53","08:21","09:10","10:02","10:50","11:15","11:40","12:05","12:30","12:55","13:20","13:45","14:10","14:35","15:00","15:25","15:50","16:15","16:33","16:51","17:10","17:28","17:46","18:05","18:23","18:41","19:00","19:18","19:36","19:55","20:15","20:45","21:20","21:55","22:10","22:25","22:40","23:00","23:10","23:35","00:05","00:35","01:10"];
-var h210s = ["04:05","04:25","04:45","05:05","05:25","05:45","06:05","06:27","06:50","07:12","07:35","07:57","08:20","08:45","09:22","10:00","10:42","11:10","11:35","12:00","12:25","12:50","13:15","13:40","14:05","14:30","14:55","15:20","15:45","16:10","16:35","17:00","17:25","17:50","18:15","18:40","19:05","19:30","19:55","20:30","21:10","21:50","22:15","22:35","22:55","23:15","23:35","00:00","00:30","01:00"];
-var h210d = ["04:10","04:50","05:30","06:10","06:55","07:42","08:30","09:18","10:00","10:25","10:48","11:10","11:33","11:55","12:18","12:40","13:03","13:25","13:48","14:10","14:33","14:55","15:18","15:40","16:03","16:25","16:48","17:10","17:33","17:55","18:18","18:43","19:20","20:00","20:40","21:03","21:25","21:48","22:33","23:18","00:05","00:55"];
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+const minToH = n => { n=((n%1440)+1440)%1440; const h=Math.floor(n/60),m=n%60; return `${h<10?'0':''}${h}:${m<10?'0':''}${m}`; };
+const pad2   = n => String(n).padStart(2,'0');
 
-var h240u = ["04:00","04:25","04:45","04:56","05:07","05:17","05:27","05:38","05:46","05:54","06:02","06:10","06:18","06:26","06:35","06:44","06:53","07:02","07:11","07:20","07:29","07:38","07:47","07:56","08:05","08:15","08:25","08:37","08:50","09:05","09:21","09:37","09:53","10:10","10:27","10:44","10:57","11:09","11:20","11:31","11:42","11:53","12:04","12:16","12:27","12:39","12:50","13:02","13:15","13:30","13:45","13:57","14:09","14:20","14:30","14:40","14:50","15:00","15:10","15:20","15:30","15:40","15:50","16:00","16:10","16:20","16:30","16:41","16:51","17:02","17:12","17:23","17:33","17:44","17:54","18:05","18:15","18:25","18:35","18:45","18:55","19:05","19:15","19:25","19:35","19:45","19:57","20:10","20:25","20:40","20:56","21:13","21:30","21:47","22:02","22:15","22:28","22:41","22:53","23:05","23:17","23:30","23:43","23:55","00:10","00:25","00:40","01:00"];
-var h240s = ["04:00","04:25","04:41","04:55","05:09","05:23","05:37","05:52","06:06","06:20","06:35","06:50","07:04","07:19","07:34","07:48","08:03","08:20","08:37","08:54","09:12","09:35","10:00","10:25","10:53","11:21","11:50","12:09","12:27","12:45","13:02","13:19","13:32","13:44","13:56","14:08","14:20","14:32","14:44","14:57","15:09","15:21","15:33","15:46","15:58","16:10","16:22","16:35","16:49","17:02","17:16","17:29","17:43","17:57","18:11","18:25","18:43","19:08","19:32","19:56","20:20","20:44","21:05","21:25","21:46","22:10","22:33","22:57","23:20","23:40","00:00","00:25","01:00"];
-var h240d = ["04:25","04:46","05:07","05:28","05:49","06:10","06:32","06:54","07:16","07:38","08:00","08:25","09:00","09:38","10:16","10:54","11:18","11:41","11:57","12:12","12:28","12:44","12:59","13:14","13:30","13:45","14:00","14:16","14:31","14:46","15:02","15:17","15:32","15:48","16:03","16:18","16:34","16:49","17:05","17:21","17:36","17:52","18:10","18:35","19:12","19:50","20:20","20:50","21:20","21:50","22:20","22:50","23:20","00:00","00:50"];
+// Caminhada total de casa até o ponto de ônibus (apto→rua + rua→ponto)
+const casaTotal = L => L.aptoRua + L.ruaPonto;
 
-function toMin(t) {
-  var p = t.split(":").map(Number);
-  return p[0] * 60 + p[1];
+function faltaStr(d, modo='onibus') {
+  if (d <= 0)  return modo==='casa' ? 'Saia agora' : 'Embarque agora';
+  if (d <= 1)  return modo==='casa' ? 'Saia em 1 min' : 'Ônibus chegando';
+  if (d <= 3)  return modo==='casa' ? `Saia em ${d} min` : 'Partindo em breve';
+  if (d < 60)  return `Em ${d} min`;
+  const h=Math.floor(d/60), m=d%60;
+  return `Em ${h}h${m>0?pad2(m):''}`;
 }
 
-function minParaTexto(diff) {
-  if (diff < 1) return "agora";
-  if (diff === 1) return "1 min";
-  if (diff < 60) return diff + " min";
-  var h = Math.floor(diff / 60);
-  var m = diff % 60;
-  return h + "h" + (m > 0 ? (m < 10 ? "0" : "") + m : "");
+function faltaCls(d) {
+  return d <= 0 ? 'falta-agora' : d <= 8 ? 'falta-breve' : 'falta-normal';
 }
 
-function renderHorarios(lista, elId, nowMin) {
-  var futuros = lista.filter(function(t) { return toMin(t) > nowMin; }).slice(0, 3);
-  var el = document.getElementById(elId);
-  el.innerHTML = "";
+function getTransito(h, day) {
+  const sex=day===5, ma=h>=6&&h<10, ta=h>=17&&h<20;
+  if (sex&&(ma||ta)) return { e210:15, e240:7,  label:'Sexta + Pico',          tipo:'sexta'  };
+  if (sex)           return { e210:5,  e240:3,  label:'Sexta — lentidão',      tipo:'sexta'  };
+  if (ma)            return { e210:10, e240:5,  label:'Pico manhã',            tipo:'pico'   };
+  if (ta)            return { e210:8,  e240:4,  label:'Pico tarde',            tipo:'pico'   };
+  return               { e210:0,  e240:0,  label:'',                      tipo:'normal' };
+}
 
-  if (futuros.length === 0) {
-    el.innerHTML = '<div class="sem-horarios">Sem mais horários hoje</div>';
+function getLista(id, day) {
+  const k = day===0?'dom':day===6?'sab':'util';
+  return LINHAS[id].horarios[k];
+}
+
+const svgArrow = `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+
+/* ═══════════════════════════════════════
+   DADOS
+   aptoRua  → min a pé do apartamento até a rua
+   ruaPonto → min a pé da rua até o ponto do ônibus
+   caminhada→ min a pé do ponto de desembarque até em casa (sentido Estação→Casa)
+═══════════════════════════════════════ */
+const LINHAS = {
+  210: {
+    cor:'#3b82f6', glow:'var(--a210-glow)', dim:'var(--a210-dim)',
+    nome:'Pq. Vitória – Vila Ramos', tipo:'Circular · Municipal',
+    origem:'TP Estação Franco da Rocha', destino:'Pq. Vitória – Vila Ramos',
+    tempoBase:20, caminhada:0, aptoRua:3, ruaPonto:1,
+    horarios:{
+      util:['04:05','04:25','04:45','05:05','05:25','05:47','06:10','06:35','07:01','07:27','07:53','08:21','09:10','10:02','10:50','11:15','11:40','12:05','12:30','12:55','13:20','13:45','14:10','14:35','15:00','15:25','15:50','16:15','16:33','16:51','17:10','17:28','17:46','18:05','18:23','18:41','19:00','19:18','19:36','19:55','20:15','20:45','21:20','21:55','22:10','22:25','22:40','23:00','23:10','23:35','00:05','00:35','01:10'],
+      sab: ['04:05','04:25','04:45','05:05','05:25','05:45','06:05','06:27','06:50','07:12','07:35','07:57','08:20','08:45','09:22','10:00','10:42','11:10','11:35','12:00','12:25','12:50','13:15','13:40','14:05','14:30','14:55','15:20','15:45','16:10','16:35','17:00','17:25','17:50','18:15','18:40','19:05','19:30','19:55','20:30','21:10','21:50','22:15','22:35','22:55','23:15','23:35','00:00','00:30','01:00'],
+      dom: ['04:10','04:50','05:30','06:10','06:55','07:42','08:30','09:18','10:00','10:25','10:48','11:10','11:33','11:55','12:18','12:40','13:03','13:25','13:48','14:10','14:33','14:55','15:18','15:40','16:03','16:25','16:48','17:10','17:33','17:55','18:18','18:43','19:20','20:00','20:40','21:03','21:25','21:48','22:33','23:18','00:05','00:55']
+    }
+  },
+  240: {
+    cor:'#8b5cf6', glow:'var(--a240-glow)', dim:'var(--a240-dim)',
+    nome:'Monte Verde', tipo:'Circular · Municipal',
+    origem:'TP Estação Franco da Rocha', destino:'TS Monte Verde',
+    tempoBase:10, caminhada:12, aptoRua:3, ruaPonto:1,
+    horarios:{
+      util:['04:00','04:25','04:45','04:56','05:07','05:17','05:27','05:38','05:46','05:54','06:02','06:10','06:18','06:26','06:35','06:44','06:53','07:02','07:11','07:20','07:29','07:38','07:47','07:56','08:05','08:15','08:25','08:37','08:50','09:05','09:21','09:37','09:53','10:10','10:27','10:44','10:57','11:09','11:20','11:31','11:42','11:53','12:04','12:16','12:27','12:39','12:50','13:02','13:15','13:30','13:45','13:57','14:09','14:20','14:30','14:40','14:50','15:00','15:10','15:20','15:30','15:40','15:50','16:00','16:10','16:20','16:30','16:41','16:51','17:02','17:12','17:23','17:33','17:44','17:54','18:05','18:15','18:25','18:35','18:45','18:55','19:05','19:15','19:25','19:35','19:45','19:57','20:10','20:25','20:40','20:56','21:13','21:30','21:47','22:02','22:15','22:28','22:41','22:53','23:05','23:17','23:30','23:43','23:55','00:10','00:25','00:40','01:00'],
+      sab: ['04:00','04:25','04:41','04:55','05:08','05:22','05:36','05:51','06:05','06:19','06:34','06:49','07:03','07:18','07:33','07:47','08:02','08:18','08:40','09:05','09:32','09:59','10:26','10:54','11:22','11:51','12:15','12:35','12:55','13:11','13:27','13:43','13:59','14:15','14:31','14:47','15:04','15:20','15:36','15:53','16:09','16:25','16:42','17:00','17:18','17:36','17:54','18:12','18:28','18:45','19:02','19:20','19:42','20:10','20:46','21:22','21:55','22:20','22:45','23:10','23:35','00:00','00:25','01:00'],
+      dom: ['04:25','04:46','05:07','05:28','05:49','06:10','06:32','06:54','07:16','07:38','08:00','08:25','09:00','09:38','10:16','10:54','11:18','11:41','11:57','12:12','12:28','12:44','12:59','13:14','13:30','13:45','14:00','14:16','14:31','14:46','15:02','15:17','15:32','15:48','16:03','16:18','16:34','16:49','17:05','17:21','17:36','17:52','18:10','18:35','19:12','19:50','20:20','20:50','21:20','21:50','22:20','22:50','23:20','00:00','00:50']
+    }
+  }
+};
+
+/* ═══════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════ */
+let sentido = 'estacao';
+
+/* ═══════════════════════════════════════
+   COMPONENTES
+═══════════════════════════════════════ */
+
+function renderHero({ id, ponto, acao, urgente, rows, cor, barPct }) {
+  return `
+    <div class="hero-card${urgente?' hero-urgent':''}" onclick="goPage('horarios');selecionarLinha(${id})">
+      <div class="hero-accent" style="background:linear-gradient(90deg,${cor},${cor}80)"></div>
+      <div class="hero-body">
+        <div class="hero-status">
+          <div class="hero-live">
+            <div class="live-dot"></div>
+            <span class="hero-ponto">${ponto}</span>
+          </div>
+          <div id="heroChip" class="pico-chip chip-normal"><span id="heroChipTxt">Normal</span></div>
+        </div>
+        <div class="hero-linha-badge" style="background:${cor}">LINHA ${id}</div>
+        <div class="hero-action">${urgente?'<span class="hero-urgent-dot"></span>':''}${acao}</div>
+        ${rows.map(r => `<div class="hero-info-row">${r}</div>`).join('')}
+        ${barPct!=null ? `<div class="hero-progress"><div class="hero-progress-bar" style="transform:scaleX(${(barPct/100).toFixed(3)});background:${cor}"></div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderTimeline(steps) {
+  const items = steps.map(s => `
+    <div class="tl-item${s.active?'':' tl-future'}">
+      <div class="tl-icon-wrap${s.active?' active-icon':''}">${s.icon}</div>
+      <div class="tl-content">
+        <div class="tl-label">${s.label}</div>
+        <div class="tl-value${s.sec?' sec':''}">${s.value}</div>
+      </div>
+      <div class="tl-time">${s.time}</div>
+    </div>`).join('');
+  return `<div class="timeline">${items}</div>`;
+}
+
+function renderAltCard({ id, horario, detalhe, diff, modo }) {
+  const cls = id===210 ? 'b210' : 'b240';
+  return `
+    <div class="alt-card" onclick="goPage('horarios');selecionarLinha(${id})">
+      <div class="alt-badge ${cls}">${id}</div>
+      <div class="alt-info">
+        <div class="alt-horario">${horario}</div>
+        <div class="alt-detalhe">${detalhe}</div>
+      </div>
+      <div class="alt-falta ${faltaCls(diff)}">${faltaStr(diff, modo)}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════
+   ÍCONES DE ETAPA (reaproveitados na timeline)
+═══════════════════════════════════════ */
+const ICO_AGORA  = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>`;
+const ICO_CASA    = `<svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>`;
+const ICO_ANDAR   = `<svg viewBox="0 0 24 24"><path d="M13 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0M6 20l4-8 4 3 3-5"/></svg>`;
+const ICO_ONIBUS  = `<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg>`;
+
+/* ═══════════════════════════════════════
+   RELÓGIO
+═══════════════════════════════════════ */
+function tickClock() {
+  const now = new Date();
+  const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  $('clockTime').textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  $('clockDay').textContent  = dias[now.getDay()];
+}
+
+/* ═══════════════════════════════════════
+   RENDER HOME
+═══════════════════════════════════════ */
+function renderHome() {
+  const now = new Date();
+  const day = now.getDay(), h = now.getHours(), m = now.getMinutes();
+  const nowMin = h*60+m;
+  const tr = getTransito(h, day);
+
+  sentido==='estacao' ? renderModoEstacao(day, h, nowMin, tr) : renderModoCasa(day, h, nowMin, tr);
+
+  setTimeout(() => {
+    const chip = $('heroChip'), chipTxt = $('heroChipTxt');
+    if (!chip) return;
+    const map = { normal:['chip-normal','Normal'], pico:['chip-pico', tr.label], sexta:['chip-sexta', tr.label] };
+    chip.className = `pico-chip ${map[tr.tipo][0]}`;
+    chipTxt.textContent = map[tr.tipo][1];
+  }, 0);
+}
+
+/* ---- Sentido: Estação → Casa ---- */
+function renderModoEstacao(day, h, nowMin, tr) {
+  const candidatos = [210, 240].map(id => {
+    const lista   = getLista(id, day);
+    const futuros = lista.filter(t => toMin(t) > nowMin);
+    return { id, futuros };
+  }).filter(c => c.futuros.length > 0);
+
+  if (!candidatos.length) {
+    $('heroWrap').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-sec);font-size:var(--t-md)">Nenhum horário disponível hoje.</div>`;
+    $('timelineWrap').innerHTML = ''; $('altsWrap').innerHTML = '';
     return;
   }
 
-  futuros.forEach(function(t, i) {
-    var diff = toMin(t) - nowMin;
-    var div = document.createElement("div");
-    div.className = "horario-item";
-    div.innerHTML = '<span class="hora">' + t + '</span><span class="mins">' + minParaTexto(diff) + '</span>';
-    el.appendChild(div);
-    if (i < futuros.length - 1) {
-      var divider = document.createElement("div");
-      divider.className = "divider";
-      el.appendChild(divider);
+  const melhor = candidatos.reduce((a,b) => {
+    const La = LINHAS[a.id], Lb = LINHAS[b.id];
+    const eA = a.id===210?tr.e210:tr.e240, eB = b.id===210?tr.e210:tr.e240;
+    const chegaA = toMin(a.futuros[0]) + La.tempoBase + eA + La.caminhada;
+    const chegaB = toMin(b.futuros[0]) + Lb.tempoBase + eB + Lb.caminhada;
+    return chegaA <= chegaB ? a : b;
+  });
+
+  const L     = LINHAS[melhor.id];
+  const extra = melhor.id===210 ? tr.e210 : tr.e240;
+  const prox  = melhor.futuros[0];
+  const diff  = toMin(prox) - nowMin;
+  const tempo = L.tempoBase + extra + L.caminhada;
+  const chegada = minToH(toMin(prox) + tempo);
+
+  const lista = getLista(melhor.id, day);
+  const prevT = lista[lista.indexOf(prox)-1];
+  let barPct  = 0;
+  if (prevT) { const total=toMin(prox)-toMin(prevT); barPct=Math.min(100,Math.max(0,Math.round((nowMin-toMin(prevT))/total*100))); }
+
+  const acao    = faltaStr(diff, 'onibus');
+  const urgente = diff <= 3;
+  const rows = [`Ônibus às <b>${prox}</b>`, `Chegada em casa <b>≈${chegada}</b>`];
+  if (extra > 0) rows.push(`<span style="color:var(--text-ter);font-size:var(--t-xs)">+${extra} min de trânsito · ${tr.label}</span>`);
+
+  $('heroWrap').innerHTML = renderHero({ id:melhor.id, ponto:'TP Estação Franco da Rocha', acao, urgente, rows, cor:L.cor, barPct });
+
+  const now2 = new Date();
+  const horaAtual = `${pad2(now2.getHours())}:${pad2(now2.getMinutes())}`;
+  const tl = [{ icon:ICO_AGORA, label:'Agora', value:horaAtual, time:horaAtual, active:true }];
+
+  tl.push({ icon:ICO_ONIBUS, label: diff>0 ? 'Ônibus parte da estação' : 'Embarque agora', value:`Linha ${melhor.id} · ${L.nome}`, time:prox, active:diff<=0 });
+
+  if (L.caminhada > 0) {
+    const chegPonto = minToH(toMin(prox) + L.tempoBase + extra);
+    tl.push({ icon:ICO_ANDAR, label:`Desembarca · ${L.caminhada} min a pé até em casa`, value:L.destino, time:chegPonto, active:false, sec:true });
+  }
+
+  tl.push({ icon:ICO_CASA, label:'Chegada em casa', value:'Estimativa com trânsito', time:chegada, active:false });
+  $('timelineWrap').innerHTML = `<div class="timeline-title">Sua viagem</div>${renderTimeline(tl)}`;
+
+  const alts = [];
+  candidatos.forEach(c => {
+    if (c.id === melhor.id) {
+      if (c.futuros[1]) {
+        const Lx = LINHAS[c.id], ex2 = c.id===210?tr.e210:tr.e240;
+        const d2 = toMin(c.futuros[1])-nowMin;
+        const ch2 = minToH(toMin(c.futuros[1])+Lx.tempoBase+ex2+Lx.caminhada);
+        alts.push(renderAltCard({ id:c.id, horario:c.futuros[1], detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'onibus' }));
+      }
+    } else {
+      const Lx = LINHAS[c.id], ex2 = c.id===210?tr.e210:tr.e240;
+      const d2 = toMin(c.futuros[0])-nowMin;
+      const ch2 = minToH(toMin(c.futuros[0])+Lx.tempoBase+ex2+Lx.caminhada);
+      alts.push(renderAltCard({ id:c.id, horario:c.futuros[0], detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'onibus' }));
     }
   });
+
+  $('altsWrap').innerHTML = alts.length
+    ? `<div class="alts-title">Alternativas</div><div class="alts-list">${alts.join('')}</div>`
+    : '';
 }
 
-function atualizar() {
-  var now = new Date();
-  var day = now.getDay();
-  var h = now.getHours();
-  var m = now.getMinutes();
-  var nowMin = h * 60 + m;
+/* ---- Sentido: Casa → Estação ---- */
+function renderModoCasa(day, h, nowMin, tr) {
+  const candidatos = [210, 240].map(id => {
+    const L     = LINHAS[id];
+    const lista = getLista(id, day);
+    const walk  = casaTotal(L);
+    const alc   = lista.filter(t => toMin(t)-nowMin >= walk);
+    return { id, alc, L, walk };
+  }).filter(c => c.alc.length > 0);
 
-  var hStr = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
-  document.getElementById("horaAtual").textContent = hStr;
+  if (!candidatos.length) {
+    $('heroWrap').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-sec);font-size:var(--t-md)">Nenhum ônibus alcançável hoje.</div>`;
+    $('timelineWrap').innerHTML = ''; $('altsWrap').innerHTML = '';
+    return;
+  }
 
-  var dias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-  var tipos = ["Domingo / Feriado","Dia Útil","Dia Útil","Dia Útil","Dia Útil","Dia Útil","Sábado"];
-  document.getElementById("diaLabel").textContent = dias[day] + " · " + tipos[day];
+  const melhor = candidatos.reduce((a,b) => {
+    const La=a.L, Lb=b.L;
+    const eA=a.id===210?tr.e210:tr.e240, eB=b.id===210?tr.e210:tr.e240;
+    const chegaA = toMin(a.alc[0]) + La.tempoBase + eA + La.caminhada;
+    const chegaB = toMin(b.alc[0]) + Lb.tempoBase + eB + Lb.caminhada;
+    return chegaA <= chegaB ? a : b;
+  });
 
-  var lista210, lista240;
-  if (day === 0) { lista210 = h210d; lista240 = h240d; }
-  else if (day === 6) { lista210 = h210s; lista240 = h240s; }
-  else { lista210 = h210u; lista240 = h240u; }
+  const L      = melhor.L;
+  const prox   = melhor.alc[0];
+  const extra  = melhor.id===210 ? tr.e210 : tr.e240;
 
-  renderHorarios(lista210, "h210", nowMin);
-  renderHorarios(lista240, "h240", nowMin);
+  // Etapas de caminhada, em MICRO: apto → rua → ponto
+  const chegaPontoMin = toMin(prox);                 // precisa estar no ponto quando o ônibus chega
+  const sairRuaMin    = chegaPontoMin - L.ruaPonto;   // sai da rua rumo ao ponto
+  const sairAptoMin   = sairRuaMin - L.aptoRua;       // sai do apartamento
+
+  const sairApto = minToH(sairAptoMin);
+  const sairRua  = minToH(sairRuaMin);
+  const diffSair = sairAptoMin - nowMin;
+
+  const tempo = L.tempoBase + extra + L.caminhada;
+  const chegadaCasa = minToH(toMin(prox) + tempo);
+  const acao    = faltaStr(diffSair, 'casa');
+  const urgente = diffSair <= 3;
+
+  const rows = [
+    `Saia do apto às <b>${sairApto}</b>`,
+    `Ônibus na estação às <b>${prox}</b>`,
+    `Chega em casa ≈<b>${chegadaCasa}</b>`
+  ];
+  if (extra > 0) rows.push(`<span style="color:var(--text-ter);font-size:var(--t-xs)">+${extra} min de trânsito · ${tr.label}</span>`);
+
+  // Barra de progresso: quanto da janela até a hora de sair já passou
+  const listaFull   = getLista(melhor.id, day);
+  const idxProx      = listaFull.indexOf(prox);
+  const prevBusT     = idxProx > 0 ? listaFull[idxProx-1] : null;
+  let barPct = null;
+  if (prevBusT) {
+    const prevSairMin = toMin(prevBusT) - melhor.walk;
+    const janela = sairAptoMin - prevSairMin;
+    if (janela > 0) barPct = Math.min(100, Math.max(0, Math.round((nowMin-prevSairMin)/janela*100)));
+  }
+
+  $('heroWrap').innerHTML = renderHero({ id:melhor.id, ponto:'Sua casa', acao, urgente, rows, cor:L.cor, barPct });
+
+  const now2 = new Date();
+  const horaAtual = `${pad2(now2.getHours())}:${pad2(now2.getMinutes())}`;
+  const tl = [{ icon:ICO_AGORA, label:'Agora', value:horaAtual, time:horaAtual, active:true }];
+
+  tl.push({ icon:ICO_CASA,  label:`Sair do apto · ${L.aptoRua} min a pé até a rua`, value:'Caminho até a rua', time:sairApto, active:diffSair<=0 && (nowMin<sairRuaMin) });
+  tl.push({ icon:ICO_ANDAR, label:`Da rua até o ponto · ${L.ruaPonto} min a pé`,    value:`Ponto da linha ${melhor.id}`, time:sairRua, active:false, sec:true });
+  tl.push({ icon:ICO_ONIBUS,label:'Ônibus parte da estação', value:`Linha ${melhor.id} · ${L.nome}`, time:prox, active:false });
+
+  if (L.caminhada > 0) {
+    const chegPonto = minToH(toMin(prox) + L.tempoBase + extra);
+    tl.push({ icon:ICO_ANDAR, label:`Desembarca · ${L.caminhada} min a pé`, value:L.destino, time:chegPonto, active:false, sec:true });
+  }
+  tl.push({ icon:ICO_CASA, label:'Chegada em casa', value:'Estimativa com trânsito', time:chegadaCasa, active:false });
+
+  $('timelineWrap').innerHTML = `<div class="timeline-title">Sua viagem completa</div>${renderTimeline(tl)}`;
+
+  const alts = [];
+  candidatos.forEach(c => {
+    const isHero = (c.id===melhor.id);
+    const startIdx = isHero ? 1 : 0;
+    const Lx = c.L, ex2 = c.id===210?tr.e210:tr.e240;
+    if (c.alc[startIdx]) {
+      const t2 = c.alc[startIdx];
+      const s2 = minToH(toMin(t2)-casaTotal(Lx));
+      const d2 = toMin(t2)-casaTotal(Lx)-nowMin;
+      const ch2 = minToH(toMin(t2)+Lx.tempoBase+ex2+Lx.caminhada);
+      alts.push(renderAltCard({ id:c.id, horario:`Sair ${s2} → ${t2}`, detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'casa' }));
+    }
+  });
+
+  $('altsWrap').innerHTML = alts.length
+    ? `<div class="alts-title">Outras opções</div><div class="alts-list">${alts.join('')}</div>`
+    : '';
 }
 
-atualizar();
-setInterval(atualizar, 30000);
+/* ═══════════════════════════════════════
+   TOGGLE SENTIDO
+═══════════════════════════════════════ */
+function setSentido(s) {
+  sentido = s;
+  $('btnEst').classList.toggle('active',  s==='estacao');
+  $('btnCasa').classList.toggle('active', s==='casa');
+  $('sentidoSlider').classList.toggle('right', s==='casa');
+  renderHome();
+}
+
+/* ═══════════════════════════════════════
+   NAVEGAÇÃO
+═══════════════════════════════════════ */
+function goPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el  => el.classList.remove('active'));
+  $(`page-${p}`).classList.add('active');
+  $(`tab-${p}`).classList.add('active');
+  if (p==='horarios') renderGrade();
+  if (p==='linhas')   renderLinhas();
+  window.scrollTo(0,0);
+}
+
+/* ═══════════════════════════════════════
+   PAGE: HORÁRIOS
+═══════════════════════════════════════ */
+let gradeLinha=210, gradeTurno='util';
+
+function selecionarLinha(id) {
+  gradeLinha = id;
+  $('ltab210').className = `ltab${id===210?' a210':''}`;
+  $('ltab240').className = `ltab${id===240?' a240':''}`;
+  renderGrade();
+}
+
+function selecionarTurno(t) {
+  gradeTurno = t;
+  ['util','sab','dom'].forEach(x => $(`t${x}`).classList.toggle('active', x===t));
+  renderGrade();
+}
+
+function renderGrade() {
+  const now=new Date(), day=now.getDay(), nowMin=now.getHours()*60+now.getMinutes();
+  const lista = LINHAS[gradeLinha].horarios[gradeTurno];
+  const query = ($('searchInput').value||'').trim();
+  const isHoje = (gradeTurno==='util'&&day>=1&&day<=5)||(gradeTurno==='sab'&&day===6)||(gradeTurno==='dom'&&day===0);
+  const proxIdx = isHoje ? lista.findIndex(t=>toMin(t)>nowMin) : -1;
+  const filtered = query ? lista.filter(t=>t.startsWith(query)||t.replace(':','').startsWith(query)) : lista;
+
+  if (query && !filtered.length) { $('grade').innerHTML=`<div class="no-results">Nenhum horário para "${query}".</div>`; return; }
+
+  const grupos = { manha:[], tarde:[], noite:[] };
+  const nomes  = { manha:'Manhã · 04h–11h59', tarde:'Tarde · 12h–17h59', noite:'Noite · 18h–01h' };
+  filtered.forEach(t => { const hh=parseInt(t); grupos[hh<12?'manha':hh<18?'tarde':'noite'].push(t); });
+
+  const pCls = gradeLinha===210 ? 'prx-210' : 'prx-240';
+
+  $('grade').innerHTML = ['manha','tarde','noite'].filter(g=>grupos[g].length).map(g => `
+    <div class="grade-periodo">
+      <div class="grade-periodo-title">${nomes[g]}</div>
+      <div class="grade-chips">
+        ${grupos[g].map(t => {
+          const idx = lista.indexOf(t);
+          let cls = 'chip';
+          if (isHoje && !query) { if (idx===proxIdx) cls+=` proximo ${pCls}`; else if (toMin(t)<=nowMin) cls+=' passado'; }
+          if (query) cls+=' highlight';
+          return `<div class="${cls}">${t}</div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════
+   PAGE: LINHAS — dados ao vivo por sentido
+═══════════════════════════════════════ */
+function proximoInfoLinha(id, day, nowMin, tr, direcao) {
+  const L = LINHAS[id];
+  const lista = getLista(id, day);
+  if (direcao === 'estacao') {
+    const futuros = lista.filter(t => toMin(t) > nowMin);
+    if (!futuros.length) return null;
+    const prox  = futuros[0];
+    const extra = id===210 ? tr.e210 : tr.e240;
+    const diff  = toMin(prox) - nowMin;
+    const chegada = minToH(toMin(prox) + L.tempoBase + extra + L.caminhada);
+    return { horario:prox, diff, sub:`Chega em casa ≈${chegada}` };
+  } else {
+    const walk = casaTotal(L);
+    const alc  = lista.filter(t => toMin(t)-nowMin >= walk);
+    if (!alc.length) return null;
+    const prox    = alc[0];
+    const sairMin = toMin(prox) - walk;
+    const diff    = sairMin - nowMin;
+    return { horario:minToH(sairMin), diff, sub:`Ônibus às ${prox}` };
+  }
+}
+
+function renderDirCard(id, day, nowMin, tr, direcao) {
+  const info = proximoInfoLinha(id, day, nowMin, tr, direcao);
+  const isEst = direcao==='estacao';
+  const label = isEst ? 'Estação → Casa' : 'Casa → Estação';
+  const icon  = isEst ? ICO_ONIBUS : ICO_CASA;
+  if (!info) {
+    return `<div class="ldir-card"><div class="ldir-label">${icon}${label}</div><div class="ldir-empty">Sem horários hoje</div></div>`;
+  }
+  const modo = isEst ? 'onibus' : 'casa';
+  return `
+    <div class="ldir-card">
+      <div class="ldir-label">${icon}${label}</div>
+      <div class="ldir-time">${info.horario}</div>
+      <div class="ldir-sub">${info.sub}</div>
+      <div class="ldir-pill ${faltaCls(info.diff)}">${faltaStr(info.diff, modo)}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════
+   PAGE: LINHAS
+═══════════════════════════════════════ */
+function renderLinhas() {
+  const now = new Date(), day = now.getDay(), nowMin = now.getHours()*60+now.getMinutes();
+  const tr = getTransito(now.getHours(), day);
+  $('linhasWrap').innerHTML = [210,240].map(id => {
+    const L = LINHAS[id];
+    const util = L.horarios.util;
+    const totalCasa = casaTotal(L);
+    const totalDesc = L.tempoBase + L.caminhada;
+    return `
+      <div class="lcard">
+        <div class="lcard-head">
+          <div class="lcard-top">
+            <div class="lcard-num n${id}">${id}</div>
+            <div>
+              <div class="lcard-title">${L.nome}</div>
+              <div class="lcard-sub">${L.tipo}</div>
+            </div>
+          </div>
+          <div class="lcard-rota">
+            <div class="rp"><div class="rp-lbl">Origem</div><div class="rp-val">${L.origem}</div></div>
+            <div class="rp-arrow">${svgArrow}</div>
+            <div class="rp"><div class="rp-lbl">Destino</div><div class="rp-val">${L.destino}</div></div>
+          </div>
+        </div>
+        <div class="lcard-directions">
+          ${renderDirCard(id, day, nowMin, tr, 'estacao')}
+          ${renderDirCard(id, day, nowMin, tr, 'casa')}
+        </div>
+        <div class="lcard-stats">
+          <div class="stat"><div class="stat-lbl">Até casa</div><div class="stat-val">~${totalDesc}min</div><div class="stat-sub">da estação</div></div>
+          <div class="stat"><div class="stat-lbl">Casa→Ponto</div><div class="stat-val">${totalCasa}min</div><div class="stat-sub">${L.aptoRua}+${L.ruaPonto} a pé</div></div>
+          <div class="stat"><div class="stat-lbl">Partidas</div><div class="stat-val">${util.length}</div><div class="stat-sub">dias úteis</div></div>
+        </div>
+        <div class="lcard-infos">
+          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg></div><div class="info-text"><b>Apto → rua:</b> ${L.aptoRua} min · <b>Rua → ponto:</b> ${L.ruaPonto} min</div></div>
+          ${L.caminhada>0?`<div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M13 4a1 1 0 1 0 2 0M6 20l4-8 4 3 3-5"/></svg></div><div class="info-text"><b>${L.caminhada} min a pé</b> do ponto de desembarque até em casa</div></div>`:''}
+          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="info-text"><b>Pico manhã:</b> +${id===210?10:5} min · <b>Pico tarde:</b> +${id===210?8:4} min</div></div>
+          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="info-text"><b>Sextas:</b> +${id===210?5:3} a +${id===210?15:7} min estimado</div></div>
+          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg></div><div class="info-text">Primeira: <b>${util[0]}</b> · Última: <b>${util[util.length-1]}</b> · Carros adaptados</div></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+function refreshDynamic() {
+  renderHome();
+  if ($('page-linhas').classList.contains('active')) renderLinhas();
+}
+
+tickClock();
+renderHome();
+setInterval(tickClock, 1000);
+setInterval(refreshDynamic, 30000);
 </script>
 </body>
 </html>
