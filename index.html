@@ -3,11 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#07090f">
+<meta name="theme-color" content="#07070d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TransFranco">
-<title>TransFranco</title>
+<meta name="apple-mobile-web-app-title" content="Horário Ônibus">
+<title>Horário Ônibus</title>
+<!--
+  Horário Ônibus — histórico de versões
+  v1.0  build inicial: cards de linha, timeline, grade de horários, e a UI do
+        simulador de dia/horário na aba Linhas (sem lógica ligada ainda).
+  v1.1  tema visual (Noiva Cadáver) reforçado — cemitério maior e mais nítido,
+        árvore seca, portão de ferro, céu estrelado, névoa com deriva animada;
+        cards um pouco mais translúcidos pra deixar o cenário respirar atrás.
+        Simulador de horário/dia agora funciona de verdade nos dois sentidos
+        (Casa→Estação e Estação→Casa), pra consultar qualquer dia/hora.
+  v1.2  nome do app trocado de "TransFranco" pra "Ônibus" (mesma letra gótica
+        em estilo osso). Vocabulário visual do filme mais explícito: silhueta
+        da noiva de véu parada entre as lápides, e teia de aranha no canto —
+        pra ficar claro de cara que a referência é Noiva Cadáver, não um
+        clima genérico de cemitério.
+  v1.3  Aba Horários ganhou toggle Estação↔Casa (igual ao da Home) acima dos
+        dias — no sentido Casa→Estação cada horário mostra o par "saia de
+        casa" + "ônibus no ponto" lado a lado, sem perder a divisão por
+        turno/dia útil/sábado/domingo nem a busca por texto. Tema visual
+        Noiva Cadáver aprofundado: corvo pousado no portão de ferro (belisca
+        as penas de vez em quando), gato preto de olhos amarelos entre as
+        lápides, e buquê de flores murchas nas mãos da noiva, que agora
+        balança bem devagar como se sentisse uma brisa do submundo.
+  v1.4  nome trocado de "Ônibus" pra "Horário Ônibus" (mais claro/descritivo)
+        e a fonte gótica (UnifrakturCook) foi removida — nome agora em letra
+        normal (Inter), a pedido explícito do usuário.
+-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -16,33 +42,33 @@
 ═══════════════════════════════════════ */
 :root {
   /* Surfaces */
-  --bg:           #07090f;
-  --surface:      #11131a;
-  --surface-el:   #171b25;
-  --surface-hi:   #1e2333;
+  --bg:           #07070d;
+  --surface:      #0f0f1a;
+  --surface-el:   #161625;
+  --surface-hi:   #1f1f33;
 
   /* Text */
-  --text:         #f0f2fa;
-  --text-sec:     #9ca3af;
-  --text-ter:     #4b5263;
+  --text:         #eef1fa;
+  --text-sec:     #9aa3c4;
+  --text-ter:     #565b7d;
 
   /* Accent */
-  --a210:         #3b82f6;
-  --a210-glow:    rgba(59,130,246,.2);
-  --a210-dim:     rgba(59,130,246,.12);
+  --a210:         #38bdf8;
+  --a210-glow:    rgba(56,189,248,.25);
+  --a210-dim:     rgba(56,189,248,.14);
   --a240:         #8b5cf6;
-  --a240-glow:    rgba(139,92,246,.2);
-  --a240-dim:     rgba(139,92,246,.12);
+  --a240-glow:    rgba(139,92,246,.25);
+  --a240-dim:     rgba(139,92,246,.14);
 
   /* Semantic */
-  --success:      #22c55e;
+  --success:      #4ade80;
   --warning:      #eab308;
-  --danger:       #ef4444;
-  --info:         #f97316;
+  --danger:       #e11d48;
+  --info:         #ec4899;
 
   /* Borders & shadows */
-  --border:       rgba(255,255,255,.08);
-  --border-hi:    rgba(255,255,255,.15);
+  --border:       rgba(148,163,255,.08);
+  --border-hi:    rgba(148,163,255,.16);
   --shadow:       0 1px 3px rgba(0,0,0,.2);
   --shadow-lg:    0 2px 8px rgba(0,0,0,.25);
 
@@ -77,13 +103,156 @@ input  { font-family:inherit; }
 }
 
 /* ═══════════════════════════════════════
-   TOPBAR
+   AMBIENTAÇÃO TEMÁTICA — Noiva Cadáver
+   Camada fixa, decorativa, atrás de todo o conteúdo. Não interativa.
+   v1.1: cenário mais denso e mais visível — céu estrelado, cemitério maior
+   com árvore seca e portão, névoa com deriva lenta.
 ═══════════════════════════════════════ */
+.bg-fx { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+
+/* Céu estrelado — bem discreto, só pra dar profundidade acima da lua */
+.bg-stars {
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 10%, rgba(255,255,255,.85), transparent),
+    radial-gradient(1px   1px   at 28% 6%,  rgba(255,255,255,.6),  transparent),
+    radial-gradient(1.6px 1.6px at 45% 16%, rgba(255,255,255,.7),  transparent),
+    radial-gradient(1px   1px   at 62% 4%,  rgba(255,255,255,.55), transparent),
+    radial-gradient(1.4px 1.4px at 78% 13%, rgba(255,255,255,.65), transparent),
+    radial-gradient(1px   1px   at 90% 20%, rgba(255,255,255,.5),  transparent),
+    radial-gradient(1.2px 1.2px at 6%  24%, rgba(255,255,255,.45), transparent),
+    radial-gradient(1px   1px   at 52% 26%, rgba(255,255,255,.4),  transparent);
+  opacity:.75;
+  animation:starTwinkle 7s ease-in-out infinite alternate;
+}
+@keyframes starTwinkle { from { opacity:.45; } to { opacity:.85; } }
+
+/* Lua espectral no canto superior — glow frio, como a luz que ilumina o submundo */
+.bg-moon {
+  position:absolute; top:-50px; right:-30px;
+  width:280px; height:280px; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(238,241,250,.98), rgba(56,189,248,.4) 55%, transparent 72%);
+  box-shadow:0 0 160px 70px rgba(56,189,248,.28);
+  opacity:.85;
+  animation:moonPulse 8s ease-in-out infinite;
+}
+@keyframes moonPulse { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.12); } }
+
+/* Névoa roxa subindo do rodapé, com deriva lateral bem lenta */
+.bg-fog {
+  position:absolute; left:-10%; right:-10%; bottom:0; height:42vh;
+  background:linear-gradient(to top, rgba(139,92,246,.22), rgba(139,92,246,.05) 60%, transparent);
+  opacity:.85;
+  animation:fogDrift 24s ease-in-out infinite alternate;
+}
+@keyframes fogDrift { from { transform:translateX(-3%); } to { transform:translateX(3%); } }
+
+/* Vinheta — escurece os cantos, mais leve que antes pra deixar o cenário aparecer */
+.bg-vignette {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 28%, transparent 46%, rgba(0,0,0,.46) 100%);
+}
+
+/* Borboletas espectrais (símbolo da Emily) flutuando bem devagar e discretas */
+.bg-moth { position:absolute; opacity:.5; filter:drop-shadow(0 0 7px rgba(56,189,248,.6)); animation:mothFloat 14s ease-in-out infinite; }
+.bg-moth svg { width:30px; height:30px; }
+.bg-moth.m2 { opacity:.4; animation-duration:18s; animation-delay:-4s; }
+.bg-moth.m2 svg { width:20px; height:20px; }
+.bg-moth.m3 { opacity:.36; animation-duration:21s; animation-delay:-9s; }
+.bg-moth.m3 svg { width:22px; height:22px; }
+.bg-moth.m4 { opacity:.32; animation-duration:16s; animation-delay:-11s; }
+.bg-moth.m4 svg { width:16px; height:16px; }
+
+@keyframes mothFloat {
+  0%   { transform:translate(0,0) rotate(0deg); }
+  25%  { transform:translate(14px,-22px) rotate(8deg); }
+  50%  { transform:translate(-6px,-40px) rotate(-6deg); }
+  75%  { transform:translate(-18px,-14px) rotate(4deg); }
+  100% { transform:translate(0,0) rotate(0deg); }
+}
+
+/* Morcegos distantes — silhuetas bem pequenas cruzando o céu devagar */
+.bg-bat { position:absolute; opacity:.5; animation:batFly 26s linear infinite; }
+.bg-bat svg { width:16px; height:9px; fill:#1a1430; }
+.bg-bat.b2 { animation-duration:34s; animation-delay:-10s; opacity:.35; }
+.bg-bat.b2 svg { width:11px; height:6px; }
+@keyframes batFly {
+  0%   { transform:translate(-10vw, 0) scaleX(1); }
+  48%  { transform:translate(60vw, -18px) scaleX(1); }
+  50%  { transform:translate(62vw, -18px) scaleX(-1); }
+  100% { transform:translate(-10vw, -4px) scaleX(-1); }
+}
+
+/* Cemitério vitoriano — silhueta original em vetor, inspirada no clima do filme.
+   v1.1: cena maior, com árvore seca e portão de ferro, mais nítida (menos
+   transparente) pra realmente aparecer atrás do conteúdo. */
+.bg-graveyard { position:absolute; left:0; right:0; bottom:0; width:100%; opacity:.85; }
+.bg-graveyard svg { width:100%; height:auto; display:block; }
+.bg-graveyard .gy-fill { fill:#4a3a80; }
+.bg-graveyard .gy-fill-2 { fill:#2c2252; }
+.bg-graveyard .gy-back { fill:#1c1638; }
+
+/* Rosas decorativas — o símbolo da Emily, num canto discreto */
+.bg-rose { position:absolute; opacity:.65; filter:drop-shadow(0 0 9px rgba(236,72,153,.55)); }
+.bg-rose svg { fill:none; stroke:#ec4899; stroke-width:1.3; }
+
+/* Teia de aranha no canto — assinatura clássica do gótico vitoriano do filme */
+.bg-web { position:absolute; top:-6px; left:-6px; width:132px; height:132px; opacity:.4; }
+.bg-web svg { width:100%; height:100%; }
+.bg-web path { fill:none; stroke:#7dd3fc; stroke-width:.7; stroke-linecap:round; }
+
+/* Silhueta da noiva de véu, parada entre as lápides — o sinal mais direto
+   de "Noiva Cadáver": uma figura à distância, na luz azulada da lua, com
+   buquê de flores murchas e leve balanço no véu, como se uma brisa do
+   submundo passasse por ela de vez em quando. */
+.bg-bride { position:absolute; bottom:0; right:15%; opacity:.7; z-index:1; filter:drop-shadow(0 0 14px rgba(56,189,248,.5)); transform-origin:50% 100%; animation:brideSway 9s ease-in-out infinite; }
+.bg-bride svg { width:46px; height:100px; display:block; }
+@keyframes brideSway { 0%,100% { transform:rotate(-1.2deg); } 50% { transform:rotate(1.2deg); } }
+
+/* Corvo pousado no portão de ferro — clássico do gótico vitoriano do filme */
+.bg-raven { position:absolute; opacity:.8; animation:ravenPeck 5s ease-in-out infinite; transform-origin:50% 100%; }
+.bg-raven svg { width:24px; height:19px; display:block; }
+@keyframes ravenPeck { 0%,85%,100% { transform:rotate(0deg); } 90% { transform:rotate(-6deg); } 95% { transform:rotate(3deg); } }
+
+/* Gato preto sentado entre as lápides, olhos acesos na luz da lua */
+.bg-cat { position:absolute; opacity:.85; }
+.bg-cat svg { width:30px; height:26px; display:block; }
+.bg-cat-eyes { animation:catBlink 6s ease-in-out infinite; }
+@keyframes catBlink { 0%,92%,100% { opacity:1; } 95% { opacity:0; } }
+.brand-name { font-family:'Inter',-apple-system,sans-serif; font-size:17px; font-weight:800; letter-spacing:-.2px; line-height:1; text-shadow:0 0 12px rgba(56,189,248,.35); }
+.version-tag {
+  display:inline-block; margin-left:7px; padding:1px 6px; border-radius:20px;
+  font-family:'Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.4px;
+  color:var(--a210); border:1px solid rgba(56,189,248,.4); background:rgba(56,189,248,.1);
+  vertical-align:middle; transform:translateY(-1px);
+}
+
+/* Estados vazios com um toque temático */
+.empty-state { padding:40px 24px; text-align:center; }
+.empty-state-icon { font-size:32px; margin-bottom:10px; opacity:.6; }
+.empty-state-text { color:var(--text-sec); font-size:var(--t-md); }
+
+/* ═══════════════════════════════════════
+   RESPONSIVO — telas maiores (notebook/desktop)
+   Em telas largas o app vira uma "moldura" central de largura de celular,
+   com o fundo temático (lua, cemitério, borboletas) escalando junto.
+   Em celular (abaixo de 640px) nada muda.
+═══════════════════════════════════════ */
+@media (min-width:640px) {
+  body { display:flex; justify-content:center; background:#020103; }
+  .bg-fx, .topbar, .tabbar { left:50%; right:auto; width:100%; max-width:480px; transform:translateX(-50%); }
+  .page { max-width:480px; margin:0 auto; box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 40px 100px rgba(0,0,0,.6); }
+}
+@media (min-width:900px) {
+  .bg-fx, .topbar, .tabbar { max-width:520px; }
+  .page { max-width:520px; }
+}
+
 .topbar {
   position:fixed; top:0; left:0; right:0; z-index:200;
   height:var(--nav-h);
   padding-top:env(safe-area-inset-top, 0px);
-  background:rgba(7,9,15,.9);
+  background:rgba(7,7,13,.9);
   backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
   border-bottom:1px solid var(--border);
   display:flex; align-items:flex-end; justify-content:space-between;
@@ -94,9 +263,9 @@ input  { font-family:inherit; }
   width:30px; height:30px; border-radius:9px;
   background:linear-gradient(135deg,var(--a210),var(--a240));
   display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 14px -2px var(--a210);
 }
 .brand-icon svg { width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; }
-.brand-name { font-size:var(--t-base); font-weight:700; letter-spacing:-.3px; }
 .brand-city { font-size:var(--t-xs); color:var(--text-sec); margin-top:1px; }
 .topbar-clock { text-align:right; }
 .clock-time { font-size:var(--t-lg); font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
@@ -109,7 +278,7 @@ input  { font-family:inherit; }
   position:fixed; bottom:0; left:0; right:0; z-index:200;
   height:var(--tab-h);
   padding-bottom:env(safe-area-inset-bottom, 0px);
-  background:rgba(7,9,15,.94);
+  background:rgba(7,7,13,.94);
   backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
   border-top:1px solid var(--border);
   display:flex;
@@ -139,12 +308,12 @@ input  { font-family:inherit; }
 ═══════════════════════════════════════ */
 .sentido-wrap { padding:14px 16px 0; }
 .sentido-toggle {
-  display:flex; background:var(--surface); border-radius:var(--radius-sm);
-  padding:3px; position:relative; border:1px solid var(--border);
+  display:flex; background:rgba(22,20,37,.4); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-radius:var(--radius-sm);
+  padding:3px; position:relative; border:1px solid rgba(255,255,255,.1);
 }
 .sentido-slider {
   position:absolute; top:3px; bottom:3px; width:calc(50% - 3px);
-  background:var(--surface-el); border-radius:8px;
+  background:rgba(255,255,255,.08); border-radius:8px;
   border:1px solid var(--border-hi);
   transform:translateX(0);
   transition:transform .25s cubic-bezier(.4,0,.2,1);
@@ -162,50 +331,53 @@ input  { font-family:inherit; }
 .sentido-btn.active { color:var(--text); }
 
 /* ═══════════════════════════════════════
-   HOME — HERO CARD (a única coisa que importa AGORA)
+   HOME — CARDS DAS LINHAS (visual simples e direto)
+   Um card por linha (210 e 240), sempre os dois visíveis,
+   ordenados pelo horário mais próximo primeiro.
+   v1.1: fundo mais translúcido pra deixar o cenário aparecer atrás.
 ═══════════════════════════════════════ */
 .hero-wrap { padding:14px 16px 0; }
+.linecards { display:flex; flex-direction:column; gap:12px; }
 
-.hero-card {
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
+.linecard {
+  background:rgba(20,18,34,.46);
+  backdrop-filter:blur(20px) saturate(170%);
+  -webkit-backdrop-filter:blur(20px) saturate(170%);
+  border:1px solid rgba(255,255,255,.1);
+  border-left:5px solid var(--a210);
+  border-radius:var(--radius);
   box-shadow:var(--shadow-lg);
-  overflow:hidden;
-  position:relative;
+  padding:18px;
   transition:transform .12s;
-  will-change:transform;
 }
-.hero-card:active { transform:scale(.99); }
-.hero-card.hero-urgent { border-color:rgba(239,68,68,.45); box-shadow:0 0 0 1px rgba(239,68,68,.25), var(--shadow-lg); }
+.linecard:active { transform:scale(.99); }
 
-.hero-accent { height:3px; width:100%; }
+.lc-top { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.lc-badge {
+  width:38px; height:38px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:900; color:#fff; flex-shrink:0;
+}
+.lc-eyebrow { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-sec); }
 
-.hero-body { padding:18px 18px 16px; }
+.lc-time { font-size:40px; font-weight:800; letter-spacing:-1.2px; font-variant-numeric:tabular-nums; line-height:1; color:var(--text); margin-bottom:6px; }
 
-/* Linha 1: onde você está + estado do trânsito — pequeno, de apoio */
-.hero-status { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
-.hero-live { display:flex; align-items:center; gap:7px; min-width:0; }
-.live-dot { width:7px; height:7px; border-radius:50%; background:var(--success); flex-shrink:0; box-shadow:0 0 0 3px rgba(34,197,94,.15); }
-.hero-ponto { font-size:11px; font-weight:600; color:var(--text-sec); text-transform:uppercase; letter-spacing:.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pico-chip { display:flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; }
-.chip-normal { background:var(--surface-el); color:var(--text-ter); }
-.chip-pico   { background:rgba(234,179,8,.14); color:var(--warning); }
-.chip-sexta  { background:rgba(249,115,22,.14); color:var(--info); }
+.lc-status { font-size:15px; font-weight:700; color:var(--text-sec); margin-bottom:14px; }
+.lc-status.urgente { color:var(--danger); }
+.lc-status.breve   { color:var(--warning); }
 
-.hero-linha-badge { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.8px; color:#fff; padding:3px 9px; border-radius:6px; margin-bottom:10px; }
+.lc-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 0; border-top:1px solid var(--border);
+  font-size:15px; color:var(--text-sec); font-weight:500;
+}
+.lc-row b { color:var(--text); font-variant-numeric:tabular-nums; font-weight:800; font-size:17px; }
 
-/* A ÚNICA coisa grande na tela: o que fazer agora */
-.hero-action { font-size:var(--t-3xl); font-weight:800; letter-spacing:-1.2px; line-height:1.05; margin-bottom:12px; color:var(--text); display:flex; align-items:center; gap:10px; }
-.hero-urgent-dot { width:11px; height:11px; border-radius:50%; background:var(--danger); flex-shrink:0; }
-
-/* Informações de apoio — sempre visíveis mas discretas, uma por linha */
-.hero-info-row { font-size:var(--t-base); color:var(--text-sec); margin-bottom:5px; font-weight:500; }
-.hero-info-row b { color:var(--text); font-weight:700; }
-.hero-meta-row { font-size:var(--t-xs); color:var(--text-ter); margin-top:8px; }
-
-.hero-progress { height:4px; background:var(--surface-el); border-radius:3px; margin-top:14px; overflow:hidden; }
-.hero-progress-bar { height:100%; width:100%; transform-origin:left; border-radius:3px; transition:transform .4s ease; }
+.lc-walk {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 0 0; font-size:13px; color:var(--text-ter);
+}
+.lc-walk b { color:var(--text-sec); font-variant-numeric:tabular-nums; font-weight:700; }
 
 /* ═══════════════════════════════════════
    HOME — TIMELINE (a viagem inteira, passo a passo = macro)
@@ -217,7 +389,8 @@ input  { font-family:inherit; }
 }
 .timeline {
   display:flex; flex-direction:column; gap:0;
-  background:var(--surface); border:1px solid var(--border);
+  background:rgba(15,15,26,.7); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border);
   border-radius:var(--radius); overflow:hidden;
   box-shadow:var(--shadow);
 }
@@ -261,7 +434,8 @@ input  { font-family:inherit; }
 .alts-list { display:flex; flex-direction:column; gap:8px; }
 
 .alt-card {
-  background:var(--surface); border:1px solid var(--border);
+  background:rgba(15,15,26,.7); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border);
   border-radius:var(--radius-sm); padding:12px 14px;
   display:flex; align-items:center; gap:12px;
   box-shadow:var(--shadow); cursor:pointer; transition:transform .1s;
@@ -282,7 +456,7 @@ input  { font-family:inherit; }
 .alt-detalhe { font-size:var(--t-xs); color:var(--text-ter); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 .alt-falta { font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
-.falta-agora  { background:rgba(239,68,68,.15); color:var(--danger); }
+.falta-agora  { background:rgba(225,29,72,.15); color:var(--danger); }
 .falta-breve  { background:rgba(234,179,8,.15); color:var(--warning); }
 .falta-normal { background:var(--surface-el); color:var(--text-sec); }
 
@@ -294,18 +468,20 @@ input  { font-family:inherit; }
 .ltab {
   flex:1; padding:9px; border-radius:var(--radius-sm);
   font-size:var(--t-base); font-weight:700;
-  color:var(--text-sec); background:var(--surface);
+  color:var(--text-sec); background:rgba(15,15,26,.7);
   border:1px solid var(--border);
   transition:all .15s;
 }
 .ltab.a210 { background:var(--a210); color:#fff; border-color:var(--a210); }
 .ltab.a240 { background:var(--a240); color:#fff; border-color:var(--a240); }
 
+.hr-controls .sentido-toggle { margin-bottom:10px; }
+
 .turno-tabs { display:flex; gap:6px; margin-bottom:12px; }
 .ttab {
   padding:6px 14px; border-radius:20px;
   font-size:var(--t-sm); font-weight:600;
-  color:var(--text-ter); background:var(--surface);
+  color:var(--text-ter); background:rgba(15,15,26,.7);
   border:1px solid var(--border);
   transition:all .15s;
 }
@@ -314,7 +490,7 @@ input  { font-family:inherit; }
 .search-wrap { position:relative; margin-bottom:14px; }
 .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px; height:15px; fill:none; stroke:var(--text-ter); stroke-width:2; stroke-linecap:round; }
 .search-input {
-  width:100%; background:var(--surface); border:1px solid var(--border);
+  width:100%; background:rgba(15,15,26,.7); border:1px solid var(--border);
   border-radius:var(--radius-sm); padding:10px 12px 10px 36px;
   color:var(--text); font-size:var(--t-md); font-weight:500; outline:none;
   transition:border-color .15s;
@@ -333,7 +509,7 @@ input  { font-family:inherit; }
 .chip {
   padding:7px 13px; border-radius:9px;
   font-size:var(--t-md); font-weight:600;
-  color:var(--text-sec); background:var(--surface);
+  color:var(--text-sec); background:rgba(15,15,26,.7);
   border:1px solid var(--border);
   font-variant-numeric:tabular-nums; transition:all .15s;
 }
@@ -344,24 +520,88 @@ input  { font-family:inherit; }
 .chip.highlight { background:var(--surface-el); color:var(--text); border-color:var(--border-hi); }
 .no-results { font-size:var(--t-md); color:var(--text-ter); padding:20px 0; text-align:center; }
 
+/* Casa → Estação: lista com par de horários (saída de casa + passagem no ponto) */
+.casa-list {
+  background:rgba(15,15,26,.7); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);
+}
+.casa-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 14px; border-bottom:1px solid var(--border);
+  border-left:3px solid transparent;
+  transition:opacity .2s, background .2s;
+}
+.casa-row:last-child { border-bottom:none; }
+.casa-row.passado { opacity:.28; }
+.casa-row.highlight { background:var(--surface-el); }
+.casa-left, .casa-right { min-width:0; }
+.casa-right { text-align:right; }
+.casa-lbl {
+  font-size:9px; font-weight:700; color:var(--text-ter);
+  text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px;
+}
+.casa-sair { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); }
+.casa-ponto { font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-sec); }
+.casa-mid { flex-shrink:0; opacity:.5; }
+.casa-mid svg { width:13px; height:13px; fill:none; stroke:var(--text-ter); stroke-width:2; stroke-linecap:round; }
+
 /* ═══════════════════════════════════════
    PAGE LINHAS
 ═══════════════════════════════════════ */
 .linhas-wrap { padding:16px; }
+
+/* ═══════════════════════════════════════
+   SIMULADOR DE HORÁRIO (página Linhas)
+   Simula "e se fosse tal dia, tal hora" — tipo o seletor de horário do Google
+   Maps. Mostra, pros dois sentidos, o horário de embarque/chegada calculado
+   pra qualquer dia e hora escolhidos, sem depender do horário real do celular.
+═══════════════════════════════════════ */
+.sim-card {
+  background:rgba(20,18,34,.5); backdrop-filter:blur(20px) saturate(170%); -webkit-backdrop-filter:blur(20px) saturate(170%);
+  border:1px solid rgba(255,255,255,.1); border-radius:var(--radius);
+  box-shadow:var(--shadow-lg); padding:16px; margin-bottom:16px;
+}
+.sim-title { font-size:11px; font-weight:700; color:var(--text-ter); text-transform:uppercase; letter-spacing:1.4px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+
+.sim-toggle { display:flex; background:rgba(255,255,255,.05); border-radius:var(--radius-sm); padding:3px; position:relative; border:1px solid var(--border); margin-bottom:10px; }
+.sim-toggle-slider { position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); background:rgba(255,255,255,.1); border-radius:8px; border:1px solid var(--border-hi); transition:transform .25s cubic-bezier(.4,0,.2,1); }
+.sim-toggle-slider.right { transform:translateX(100%); }
+.sim-toggle-btn { flex:1; padding:8px 8px; border-radius:8px; font-size:12px; font-weight:600; color:var(--text-ter); display:flex; align-items:center; justify-content:center; gap:5px; position:relative; z-index:1; transition:color .2s; }
+.sim-toggle-btn.active { color:var(--text); }
+
+.sim-day-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.sim-day-tab { padding:7px 12px; border-radius:20px; font-size:12px; font-weight:600; color:var(--text-ter); background:rgba(255,255,255,.05); border:1px solid var(--border); }
+.sim-day-tab.active { background:rgba(255,255,255,.12); color:var(--text); border-color:var(--border-hi); }
+
+.sim-time-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.sim-time-input {
+  flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:9px 12px; color:var(--text); font-size:var(--t-md); font-weight:600; outline:none; font-variant-numeric:tabular-nums;
+  color-scheme:dark;
+}
+.sim-time-input:focus { border-color:var(--a210); }
+.sim-now-btn { padding:9px 12px; border-radius:var(--radius-sm); background:rgba(255,255,255,.05); border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text-sec); white-space:nowrap; }
+
+.sim-results { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
+.sim-line-block { border-top:1px solid var(--border); padding-top:12px; }
+.sim-line-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.sim-line-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.sim-line-name { font-size:13px; font-weight:700; color:var(--text-sec); }
+.sim-empty-line { font-size:12px; color:var(--text-ter); padding:2px 0 4px; }
 .lcard {
-  background:var(--surface); border:1px solid var(--border);
+  background:rgba(15,15,26,.72); border:1px solid var(--border);
   border-radius:var(--radius); overflow:hidden;
   box-shadow:var(--shadow); margin-bottom:12px;
 }
-.lcard-head { padding:18px; background:var(--surface-el); border-bottom:1px solid var(--border); }
+.lcard-head { padding:18px; background:rgba(22,20,37,.55); border-bottom:1px solid var(--border); }
 .lcard-top { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
 .lcard-num {
   width:52px; height:52px; border-radius:14px;
   display:flex; align-items:center; justify-content:center;
   font-size:22px; font-weight:900; color:#fff; flex-shrink:0;
 }
-.n210 { background:linear-gradient(135deg,var(--a210),#1d4ed8); }
-.n240 { background:linear-gradient(135deg,var(--a240),#6d28d9); }
+.n210 { background:linear-gradient(135deg,var(--a210),#0369a1); }
+.n240 { background:linear-gradient(135deg,var(--a240),#4c1d95); }
 .lcard-title { font-size:var(--t-lg); font-weight:700; letter-spacing:-.3px; }
 .lcard-sub   { font-size:var(--t-xs); color:var(--text-sec); margin-top:2px; }
 .lcard-rota  { background:var(--surface-hi); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:8px; }
@@ -397,6 +637,130 @@ input  { font-family:inherit; }
 </head>
 <body>
 
+<!-- AMBIENTAÇÃO — decorativa, não interativa -->
+<div class="bg-fx" aria-hidden="true">
+  <div class="bg-stars"></div>
+  <div class="bg-moon"></div>
+
+  <!-- teia de aranha no canto -->
+  <div class="bg-web">
+    <svg viewBox="0 0 100 100">
+      <path d="M0,0 L100,0"/>
+      <path d="M0,0 L100,55"/>
+      <path d="M0,0 L55,100"/>
+      <path d="M0,0 L0,100"/>
+      <path d="M25,0 L25,12 L12,25 L0,25"/>
+      <path d="M50,0 L50,25 L25,50 L0,50"/>
+      <path d="M75,0 L75,38 L38,75 L0,75"/>
+    </svg>
+  </div>
+
+  <div class="bg-bat b1" style="top:20%;"><svg viewBox="0 0 24 14"><path d="M12 7c-2-5-7-7-11-4 3 0 6 2 7 5-4-1-8 1-8 4 3-2 6-2 8 0-1 3 1 5 4 4-2-2-2-4 0-5 2 1 2 3 0 5 3 1 5-1 4-4 2-2 5-2 8 0 0-3-4-5-8-4 1-3 4-5 7-5-4-3-9-1-11 4z"/></svg></div>
+  <div class="bg-bat b2" style="top:32%;"><svg viewBox="0 0 24 14"><path d="M12 7c-2-5-7-7-11-4 3 0 6 2 7 5-4-1-8 1-8 4 3-2 6-2 8 0-1 3 1 5 4 4-2-2-2-4 0-5 2 1 2 3 0 5 3 1 5-1 4-4 2-2 5-2 8 0 0-3-4-5-8-4 1-3 4-5 7-5-4-3-9-1-11 4z"/></svg></div>
+
+  <div class="bg-moth m1" style="top:16%; left:12%;"><svg viewBox="0 0 32 32"><path fill="#38bdf8" d="M16 10c-1.5-5-6-8-9-6-2.5 1.7-1.5 6 3 8-4.5 1-6.5 5-4.5 8 2 2.8 6-.2 8.5-4.5 2.5 4.3 6.5 7.3 8.5 4.5 2-3-.5-7-4.5-8 4.5-2 5.5-6.3 3-8-3-2-7.5 1-9 6z"/><ellipse cx="16" cy="12" rx="1.4" ry="5" fill="#0f172a"/></svg></div>
+  <div class="bg-moth m2" style="top:34%; right:14%;"><svg viewBox="0 0 32 32"><path fill="#8b5cf6" d="M16 10c-1.5-5-6-8-9-6-2.5 1.7-1.5 6 3 8-4.5 1-6.5 5-4.5 8 2 2.8 6-.2 8.5-4.5 2.5 4.3 6.5 7.3 8.5 4.5 2-3-.5-7-4.5-8 4.5-2 5.5-6.3 3-8-3-2-7.5 1-9 6z"/><ellipse cx="16" cy="12" rx="1.4" ry="5" fill="#0f172a"/></svg></div>
+  <div class="bg-moth m3" style="top:56%; left:20%;"><svg viewBox="0 0 32 32"><path fill="#38bdf8" d="M16 10c-1.5-5-6-8-9-6-2.5 1.7-1.5 6 3 8-4.5 1-6.5 5-4.5 8 2 2.8 6-.2 8.5-4.5 2.5 4.3 6.5 7.3 8.5 4.5 2-3-.5-7-4.5-8 4.5-2 5.5-6.3 3-8-3-2-7.5 1-9 6z"/><ellipse cx="16" cy="12" rx="1.4" ry="5" fill="#0f172a"/></svg></div>
+  <div class="bg-moth m4" style="top:14%; right:26%;"><svg viewBox="0 0 32 32"><path fill="#8b5cf6" d="M16 10c-1.5-5-6-8-9-6-2.5 1.7-1.5 6 3 8-4.5 1-6.5 5-4.5 8 2 2.8 6-.2 8.5-4.5 2.5 4.3 6.5 7.3 8.5 4.5 2-3-.5-7-4.5-8 4.5-2 5.5-6.3 3-8-3-2-7.5 1-9 6z"/><ellipse cx="16" cy="12" rx="1.4" ry="5" fill="#0f172a"/></svg></div>
+
+  <!-- Rosa — o buquê da Emily, cantinho discreto -->
+  <div class="bg-rose" style="bottom:34vh; left:6%;">
+    <svg viewBox="0 0 40 62" width="42" height="66">
+      <path d="M20 24c-6-3-9-9-4-13 4-3 9 0 9 5"/>
+      <path d="M20 24c6-3 9-9 4-13-4-3-9 0-9 5"/>
+      <path d="M20 24c-3-7 1-12 6-10"/>
+      <circle cx="20" cy="17" r="3"/>
+      <path d="M20 27 C18 34 22 40 19 48 C17 54 21 57 20 61"/>
+      <path d="M20 41 Q29 39 27 47 Q20 47 20 41"/>
+    </svg>
+  </div>
+
+  <!-- Cemitério vitoriano — ilustração original em vetor, inspirada no clima do filme.
+       v1.1: acrescenta árvore seca retorcida (esquerda) e portão de ferro ao centro,
+       além de mais lápides, pra dar mais presença à cena. -->
+  <div class="bg-graveyard">
+    <svg viewBox="0 0 400 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- morro de fundo, mais escuro -->
+      <path class="gy-back" d="M0,150 L0,120 Q60,104 130,116 Q210,130 280,108 Q340,90 400,112 L400,150 Z"/>
+
+      <!-- árvore seca retorcida -->
+      <g class="gy-fill-2">
+        <rect x="26" y="70" width="6" height="60"/>
+        <path d="M29,90 C14,84 8,66 16,52 M29,80 C42,72 46,56 38,42 M29,100 C10,102 4,116 12,128 M29,70 C40,66 44,52 36,40" fill="none" stroke="#2c2252" stroke-width="4" stroke-linecap="round"/>
+      </g>
+
+      <!-- portão de ferro ao centro -->
+      <g class="gy-fill-2">
+        <rect x="188" y="86" width="4" height="44"/>
+        <rect x="208" y="86" width="4" height="44"/>
+        <path d="M188,88 Q200,72 212,88" fill="none" stroke="#2c2252" stroke-width="4"/>
+        <circle cx="200" cy="80" r="4"/>
+      </g>
+
+      <g class="gy-fill-2">
+        <rect x="4" y="98" width="16" height="32" rx="7"/>
+        <rect x="34" y="106" width="14" height="24" rx="6"/>
+        <rect x="264" y="102" width="15" height="28" rx="6"/>
+        <rect x="292" y="92" width="18" height="38" rx="8"/>
+        <rect x="322" y="108" width="13" height="22" rx="5"/>
+        <rect x="372" y="100" width="16" height="30" rx="7"/>
+        <rect x="148" y="112" width="14" height="20" rx="6"/>
+      </g>
+      <g class="gy-fill">
+        <rect x="96" y="72" width="6" height="58"/>
+        <rect x="84" y="86" width="30" height="6"/>
+        <path d="M120,130 L120,92 Q120,72 140,72 Q160,72 160,92 L160,130 Z"/>
+        <rect x="232" y="60" width="7" height="70"/>
+        <rect x="252" y="60" width="7" height="70"/>
+        <circle cx="235.5" cy="56" r="6"/>
+        <circle cx="255.5" cy="56" r="6"/>
+        <path d="M232,74 Q248,44 259,74" fill="none" stroke="#2c2252" stroke-width="4"/>
+        <rect x="352" y="100" width="6" height="30"/>
+        <path d="M355,100 C345,90 335,92 328,80 M355,96 C365,84 372,86 380,72 M355,90 C358,78 350,68 356,56" fill="none" stroke="#2c2252" stroke-width="3" stroke-linecap="round"/>
+        <rect x="60" y="108" width="20" height="22" rx="6"/>
+        <rect x="278" y="112" width="18" height="18" rx="5"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- a noiva de véu, parada à distância entre as lápides -->
+  <div class="bg-bride">
+    <svg viewBox="0 0 60 130">
+      <path d="M30 18 C10 30 6 72 14 112 C20 122 40 122 46 112 C54 72 50 30 30 18 Z" fill="#241c47"/>
+      <circle cx="30" cy="15" r="8" fill="#241c47"/>
+      <path d="M22 27 C16 52 14 92 18 128 L42 128 C46 92 44 52 38 27 Z" fill="#2c2252"/>
+      <circle cx="41" cy="62" r="3.4" fill="#ec4899" opacity=".85"/>
+      <circle cx="44.5" cy="66" r="2.6" fill="#ec4899" opacity=".75"/>
+      <circle cx="40" cy="67" r="2.2" fill="#ec4899" opacity=".7"/>
+      <!-- buquê de flores murchas segurado à altura da cintura -->
+      <g opacity=".8">
+        <path d="M40 82 C38 88 39 94 41 99" fill="none" stroke="#1c1638" stroke-width="1.4"/>
+        <path d="M43 84 C44 89 42 95 41 99" fill="none" stroke="#1c1638" stroke-width="1.2"/>
+        <circle cx="39.5" cy="81" r="2.4" fill="#ec4899" opacity=".8"/>
+        <circle cx="43" cy="83" r="2" fill="#ec4899" opacity=".65"/>
+        <circle cx="41.5" cy="78.5" r="1.8" fill="#ec4899" opacity=".7"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- corvo pousado no topo do portão de ferro -->
+  <div class="bg-raven" style="left:calc(50% - 12px); bottom:19vh;">
+    <svg viewBox="0 0 26 20"><path d="M13 3c-1.4 0-2.4 1.1-2.4 2.6 0 .9.4 1.7 1 2.2-3.2.2-6.1 2.1-6.6 5-.1.9.6 1.6 1.4 1.4-.6 1.8.4 3.6 2.1 3.4.3-1 .7-1.9 1.3-2.6.2 1 .6 1.9 1.2 2.6 1.8.1 2.7-1.7 2-3.4.8.2 1.5-.6 1.3-1.4-.6-2.8-3.3-4.7-6.4-5 .6-.4 1-1.2 1-2.1 0-1.5-1-2.7-2.4-2.7z" fill="#0d0a1a"/></svg>
+  </div>
+
+  <!-- gato preto sentado entre as lápides -->
+  <div class="bg-cat" style="left:30%; bottom:2vh;">
+    <svg viewBox="0 0 34 28">
+      <path d="M8 27 C6 20 7 13 12 10 C10 7 11 3 13 2 C14 4 14 6 14 7 C16 6 19 6 21 7 C21 6 22 4 23 2 C25 3 26 7 24 10 C29 13 30 20 28 27 Z" fill="#0a0812"/>
+      <g class="bg-cat-eyes"><circle cx="14.5" cy="13" r="1" fill="#eab308"/><circle cx="21.5" cy="13" r="1" fill="#eab308"/></g>
+    </svg>
+  </div>
+
+  <div class="bg-fog"></div>
+  <div class="bg-vignette"></div>
+</div>
+
+
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="brand">
@@ -404,7 +768,7 @@ input  { font-family:inherit; }
       <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg>
     </div>
     <div>
-      <div class="brand-name">TransFranco</div>
+      <div class="brand-name">Horário Ônibus<span class="version-tag">v1.4</span></div>
       <div class="brand-city">Franco da Rocha · SP</div>
     </div>
   </div>
@@ -450,6 +814,17 @@ input  { font-family:inherit; }
       <button class="ltab a210" id="ltab210" onclick="selecionarLinha(210)">Linha 210</button>
       <button class="ltab"     id="ltab240" onclick="selecionarLinha(240)">Linha 240</button>
     </div>
+    <div class="sentido-toggle">
+      <div class="sentido-slider" id="hrSentidoSlider"></div>
+      <button class="sentido-btn active" id="hrBtnEst" onclick="setGradeSentido('estacao')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg>
+        Estação → Casa
+      </button>
+      <button class="sentido-btn" id="hrBtnCasa" onclick="setGradeSentido('casa')">
+        <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+        Casa → Estação
+      </button>
+    </div>
     <div class="turno-tabs">
       <button class="ttab active" id="tutil" onclick="selecionarTurno('util')">Dias úteis</button>
       <button class="ttab"        id="tsab"  onclick="selecionarTurno('sab')">Sábado</button>
@@ -465,7 +840,33 @@ input  { font-family:inherit; }
 
 <!-- PAGE: LINHAS -->
 <div class="page" id="page-linhas">
-  <div class="linhas-wrap" id="linhasWrap"></div>
+  <div class="linhas-wrap">
+    <div class="sim-card">
+      <div class="sim-title">🕰️ Simular dia e horário</div>
+
+      <div class="sim-toggle" id="simToggle">
+        <div class="sim-toggle-slider" id="simToggleSlider"></div>
+        <button class="sim-toggle-btn active" id="simBtnEst" onclick="setSimSentido('estacao')">Estação → Casa</button>
+        <button class="sim-toggle-btn" id="simBtnCasa" onclick="setSimSentido('casa')">Casa → Estação</button>
+      </div>
+
+      <div class="sim-day-tabs" id="simDayTabs">
+        <button class="sim-day-tab active" data-day="2" onclick="setSimDay(2)">Seg–Qui</button>
+        <button class="sim-day-tab" data-day="5" onclick="setSimDay(5)">Sexta</button>
+        <button class="sim-day-tab" data-day="6" onclick="setSimDay(6)">Sábado</button>
+        <button class="sim-day-tab" data-day="0" onclick="setSimDay(0)">Dom/Feriado</button>
+      </div>
+
+      <div class="sim-time-row">
+        <input type="time" id="simTimeInput" class="sim-time-input" oninput="renderSimulador()">
+        <button class="sim-now-btn" onclick="simUsarAgora()">Agora</button>
+      </div>
+
+      <div class="sim-results" id="simResults"></div>
+    </div>
+
+    <div class="linhas-wrap-inner" id="linhasWrap"></div>
+  </div>
 </div>
 
 <!-- TABBAR -->
@@ -485,6 +886,8 @@ input  { font-family:inherit; }
 </nav>
 
 <script>
+const APP_VERSION = '1.1.0';
+
 /* ═══════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════ */
@@ -511,9 +914,18 @@ function faltaCls(d) {
 
 function getTransito(h, day) {
   const sex=day===5, ma=h>=6&&h<10, ta=h>=17&&h<20;
+  // e210/e240 = minutos extras somados ao tempoBase em cada condição de trânsito.
+  // ATENÇÃO Linha 210 - pico manhã: zerado em 22/08/2026. A única observação real
+  // que temos (07:12 saída → 07:25 no ponto = 13 min) aconteceu justamente dentro
+  // da janela de pico manhã (06h-10h) e já bateu exatamente com o novo tempoBase
+  // de 13 min, sem precisar de nenhum adicional. Ou seja, com um único dado, não dá
+  // pra saber se o pico realmente atrasa essa linha — então, pra não contar o
+  // atraso duas vezes, deixamos em 0 até surgir outro registro que prove o contrário.
+  // Os demais valores (tarde, sexta, linha 240) continuam sendo estimativas antigas,
+  // ainda não validadas com dado real — mexer neles só quando houver observação.
   if (sex&&(ma||ta)) return { e210:15, e240:7,  label:'Sexta + Pico',          tipo:'sexta'  };
   if (sex)           return { e210:5,  e240:3,  label:'Sexta — lentidão',      tipo:'sexta'  };
-  if (ma)            return { e210:10, e240:5,  label:'Pico manhã',            tipo:'pico'   };
+  if (ma)            return { e210:0,  e240:5,  label:'Pico manhã',            tipo:'pico'   };
   if (ta)            return { e210:8,  e240:4,  label:'Pico tarde',            tipo:'pico'   };
   return               { e210:0,  e240:0,  label:'',                      tipo:'normal' };
 }
@@ -533,10 +945,16 @@ const svgArrow = `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></sv
 ═══════════════════════════════════════ */
 const LINHAS = {
   210: {
-    cor:'#3b82f6', glow:'var(--a210-glow)', dim:'var(--a210-dim)',
+    cor:'#38bdf8', glow:'var(--a210-glow)', dim:'var(--a210-dim)',
     nome:'Pq. Vitória – Vila Ramos', tipo:'Circular · Municipal',
     origem:'TP Estação Franco da Rocha', destino:'Pq. Vitória – Vila Ramos',
-    tempoBase:20, caminhada:0, aptoRua:3, ruaPonto:1,
+    // tempoBase = tempo de viagem ESTAÇÃO → PONTO perto de casa (sem trânsito extra).
+    // Calibrado em 22/08/2026 com observação real: ônibus saiu da estação às 07:12
+    // e passou no ponto perto de casa às ~07:25 → viagem de 13 min, já em horário
+    // de pico da manhã. Antes: 20 min (chute inicial, sem dado real).
+    // Base única de calibração — vale coletar mais registros (fora de pico e
+    // em outros horários) pra refinar ainda mais.
+    tempoBase:13, caminhada:0, aptoRua:3, ruaPonto:1,
     horarios:{
       util:['04:05','04:25','04:45','05:05','05:25','05:47','06:10','06:35','07:01','07:27','07:53','08:21','09:10','10:02','10:50','11:15','11:40','12:05','12:30','12:55','13:20','13:45','14:10','14:35','15:00','15:25','15:50','16:15','16:33','16:51','17:10','17:28','17:46','18:05','18:23','18:41','19:00','19:18','19:36','19:55','20:15','20:45','21:20','21:55','22:10','22:25','22:40','23:00','23:10','23:35','00:05','00:35','01:10'],
       sab: ['04:05','04:25','04:45','05:05','05:25','05:45','06:05','06:27','06:50','07:12','07:35','07:57','08:20','08:45','09:22','10:00','10:42','11:10','11:35','12:00','12:25','12:50','13:15','13:40','14:05','14:30','14:55','15:20','15:45','16:10','16:35','17:00','17:25','17:50','18:15','18:40','19:05','19:30','19:55','20:30','21:10','21:50','22:15','22:35','22:55','23:15','23:35','00:00','00:30','01:00'],
@@ -562,26 +980,89 @@ const LINHAS = {
 let sentido = 'estacao';
 
 /* ═══════════════════════════════════════
+   FONTE DA VERDADE: qual ônibus é relevante AGORA
+   Baseado só na saída da estação. Considera dois casos:
+   - o ônibus já saiu e ainda está a caminho do ponto (em trânsito)
+   - o ônibus ainda não saiu (aguardando partida)
+   Nunca mistura isso com a caminhada até em casa.
+   Recebe `nowMin` como referência de tempo — pode ser o agora real ou um
+   horário simulado, a função não sabe (nem precisa saber) a diferença.
+═══════════════════════════════════════ */
+function getRelevantBus(id, day, nowMin, tr) {
+  const L = LINHAS[id];
+  const lista = getLista(id, day);
+  const extra = id===210 ? tr.e210 : tr.e240;
+
+  const idxNext = lista.findIndex(t => toMin(t) > nowMin);
+  const lastIdx = idxNext === -1 ? lista.length - 1 : idxNext - 1;
+
+  const build = (t, emTransito) => {
+    const partidaMin    = toMin(t);
+    const chegaPontoMin = partidaMin + L.tempoBase + extra;
+    const chegaCasaMin  = chegaPontoMin + L.caminhada;
+    return { id, L, partida:t, partidaMin, chegaPontoMin, chegaCasaMin, emTransito, extra };
+  };
+
+  // Se o último ônibus que saiu ainda não chegou no ponto, ele é o relevante
+  if (lastIdx >= 0) {
+    const t = lista[lastIdx];
+    const chegaPontoMin = toMin(t) + L.tempoBase + extra;
+    if (chegaPontoMin > nowMin) return build(t, true);
+  }
+  // Senão, o próximo a sair
+  if (idxNext === -1) return null;
+  return build(lista[idxNext], false);
+}
+
+/* ═══════════════════════════════════════
+   CASA → ESTAÇÃO: qual ônibus pegar no ponto perto de casa
+   Fluxo real da linha: sai da estação → passa no ponto perto de casa → volta pra
+   estação. Pra ir de casa pra estação, você embarca nesse MESMO ônibus quando ele
+   passa no ponto — não importa a que horas ele tinha saído da estação.
+   Por isso o cálculo é: pra cada partida (já em trânsito ou futura), acha o
+   horário que ela passa no ponto (igual ao getRelevantBus) e verifica se dá
+   tempo de chegar andando até lá partindo de `nowMin` (real ou simulado).
+   O primeiro que for alcançável é o ônibus certo.
+═══════════════════════════════════════ */
+function getRelevantPickup(id, day, nowMin, tr) {
+  const L = LINHAS[id];
+  const lista = getLista(id, day);
+  const extra = id===210 ? tr.e210 : tr.e240;
+  const walk = casaTotal(L);
+
+  const idxNext = lista.findIndex(t => toMin(t) > nowMin);
+  // Começa a busca no último ônibus que já saiu (pode estar em trânsito e ainda
+  // ser alcançável) e segue pelas próximas partidas futuras.
+  const startIdx = Math.max(0, idxNext === -1 ? lista.length - 1 : idxNext - 1);
+
+  for (let i = startIdx; i < lista.length; i++) {
+    const t = lista[i];
+    const partidaMin    = toMin(t);
+    const chegaPontoMin = partidaMin + L.tempoBase + extra;
+    if (chegaPontoMin <= nowMin) continue;               // já passou no ponto, não serve mais
+    if (nowMin + walk <= chegaPontoMin) {                 // dá tempo de chegar andando até o ponto
+      return { id, L, partida:t, partidaMin, chegaPontoMin, emTransito: partidaMin <= nowMin };
+    }
+  }
+  return null; // nenhum ônibus alcançável nesse dia/horário
+}
+
+/* ═══════════════════════════════════════
    COMPONENTES
 ═══════════════════════════════════════ */
 
-function renderHero({ id, ponto, acao, urgente, rows, cor, barPct }) {
+function renderLineCard({ id, cor, eyebrow, bigTime, statusLine, urgLevel, rows, walkLabel, walkTime }) {
+  const statusCls = urgLevel ? ` ${urgLevel}` : '';
   return `
-    <div class="hero-card${urgente?' hero-urgent':''}" onclick="goPage('horarios');selecionarLinha(${id})">
-      <div class="hero-accent" style="background:linear-gradient(90deg,${cor},${cor}80)"></div>
-      <div class="hero-body">
-        <div class="hero-status">
-          <div class="hero-live">
-            <div class="live-dot"></div>
-            <span class="hero-ponto">${ponto}</span>
-          </div>
-          <div id="heroChip" class="pico-chip chip-normal"><span id="heroChipTxt">Normal</span></div>
-        </div>
-        <div class="hero-linha-badge" style="background:${cor}">LINHA ${id}</div>
-        <div class="hero-action">${urgente?'<span class="hero-urgent-dot"></span>':''}${acao}</div>
-        ${rows.map(r => `<div class="hero-info-row">${r}</div>`).join('')}
-        ${barPct!=null ? `<div class="hero-progress"><div class="hero-progress-bar" style="transform:scaleX(${(barPct/100).toFixed(3)});background:${cor}"></div></div>` : ''}
+    <div class="linecard" style="border-left-color:${cor}; box-shadow:var(--shadow-lg), -6px 0 22px -8px ${cor}66" onclick="goPage('horarios');selecionarLinha(${id})">
+      <div class="lc-top">
+        <div class="lc-badge" style="background:${cor}; box-shadow:0 0 16px -2px ${cor}aa">${id}</div>
+        <div class="lc-eyebrow">Linha ${id} · ${eyebrow}</div>
       </div>
+      <div class="lc-time">${bigTime}</div>
+      <div class="lc-status${statusCls}">${statusLine}</div>
+      ${(rows||[]).map(r => `<div class="lc-row"><span>${r.label}</span><b>${r.time}</b></div>`).join('')}
+      ${walkTime ? `<div class="lc-walk"><span>🚶 ${walkLabel}</span><b>${walkTime}</b></div>` : ''}
     </div>`;
 }
 
@@ -639,188 +1120,106 @@ function renderHome() {
   const tr = getTransito(h, day);
 
   sentido==='estacao' ? renderModoEstacao(day, h, nowMin, tr) : renderModoCasa(day, h, nowMin, tr);
-
-  setTimeout(() => {
-    const chip = $('heroChip'), chipTxt = $('heroChipTxt');
-    if (!chip) return;
-    const map = { normal:['chip-normal','Normal'], pico:['chip-pico', tr.label], sexta:['chip-sexta', tr.label] };
-    chip.className = `pico-chip ${map[tr.tipo][0]}`;
-    chipTxt.textContent = map[tr.tipo][1];
-  }, 0);
 }
 
-/* ---- Sentido: Estação → Casa ---- */
+/* ---- Sentido: Estação → Casa ----
+   Regra: a saída da estação é o dado confiável.
+   1) "Chega no ponto perto de casa"  → partida + tempoBase + trânsito  (SEMPRE em destaque)
+   2) "Chega em casa"                 → o acima + caminhada             (separado, menor)
+   Se um ônibus já saiu e ainda não chegou no ponto, ele aparece como "a caminho".
+*/
 function renderModoEstacao(day, h, nowMin, tr) {
-  const candidatos = [210, 240].map(id => {
-    const lista   = getLista(id, day);
-    const futuros = lista.filter(t => toMin(t) > nowMin);
-    return { id, futuros };
-  }).filter(c => c.futuros.length > 0);
+  const opts = [210, 240].map(id => getRelevantBus(id, day, nowMin, tr)).filter(Boolean);
 
-  if (!candidatos.length) {
-    $('heroWrap').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-sec);font-size:var(--t-md)">Nenhum horário disponível hoje.</div>`;
+  if (!opts.length) {
+    $('heroWrap').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌙</div><div class="empty-state-text">Nenhum horário disponível hoje.<br>Até os fantasmas descansam.</div></div>`;
     $('timelineWrap').innerHTML = ''; $('altsWrap').innerHTML = '';
     return;
   }
 
-  const melhor = candidatos.reduce((a,b) => {
-    const La = LINHAS[a.id], Lb = LINHAS[b.id];
-    const eA = a.id===210?tr.e210:tr.e240, eB = b.id===210?tr.e210:tr.e240;
-    const chegaA = toMin(a.futuros[0]) + La.tempoBase + eA + La.caminhada;
-    const chegaB = toMin(b.futuros[0]) + Lb.tempoBase + eB + Lb.caminhada;
-    return chegaA <= chegaB ? a : b;
-  });
+  // Ordena pelo horário de saída da estação: quem sai primeiro aparece primeiro
+  opts.sort((a, b) => a.partidaMin - b.partidaMin);
 
-  const L     = LINHAS[melhor.id];
-  const extra = melhor.id===210 ? tr.e210 : tr.e240;
-  const prox  = melhor.futuros[0];
-  const diff  = toMin(prox) - nowMin;
-  const tempo = L.tempoBase + extra + L.caminhada;
-  const chegada = minToH(toMin(prox) + tempo);
+  const cardsHtml = opts.map(o => {
+    const { id, L, partida, partidaMin, chegaPontoMin, chegaCasaMin, emTransito, extra } = o;
+    const chegaPonto = minToH(chegaPontoMin);
+    const chegaCasa  = minToH(chegaCasaMin);
 
-  const lista = getLista(melhor.id, day);
-  const prevT = lista[lista.indexOf(prox)-1];
-  let barPct  = 0;
-  if (prevT) { const total=toMin(prox)-toMin(prevT); barPct=Math.min(100,Math.max(0,Math.round((nowMin-toMin(prevT))/total*100))); }
-
-  const acao    = faltaStr(diff, 'onibus');
-  const urgente = diff <= 3;
-  const rows = [`Ônibus às <b>${prox}</b>`, `Chegada em casa <b>≈${chegada}</b>`];
-  if (extra > 0) rows.push(`<span style="color:var(--text-ter);font-size:var(--t-xs)">+${extra} min de trânsito · ${tr.label}</span>`);
-
-  $('heroWrap').innerHTML = renderHero({ id:melhor.id, ponto:'TP Estação Franco da Rocha', acao, urgente, rows, cor:L.cor, barPct });
-
-  const now2 = new Date();
-  const horaAtual = `${pad2(now2.getHours())}:${pad2(now2.getMinutes())}`;
-  const tl = [{ icon:ICO_AGORA, label:'Agora', value:horaAtual, time:horaAtual, active:true }];
-
-  tl.push({ icon:ICO_ONIBUS, label: diff>0 ? 'Ônibus parte da estação' : 'Embarque agora', value:`Linha ${melhor.id} · ${L.nome}`, time:prox, active:diff<=0 });
-
-  if (L.caminhada > 0) {
-    const chegPonto = minToH(toMin(prox) + L.tempoBase + extra);
-    tl.push({ icon:ICO_ANDAR, label:`Desembarca · ${L.caminhada} min a pé até em casa`, value:L.destino, time:chegPonto, active:false, sec:true });
-  }
-
-  tl.push({ icon:ICO_CASA, label:'Chegada em casa', value:'Estimativa com trânsito', time:chegada, active:false });
-  $('timelineWrap').innerHTML = `<div class="timeline-title">Sua viagem</div>${renderTimeline(tl)}`;
-
-  const alts = [];
-  candidatos.forEach(c => {
-    if (c.id === melhor.id) {
-      if (c.futuros[1]) {
-        const Lx = LINHAS[c.id], ex2 = c.id===210?tr.e210:tr.e240;
-        const d2 = toMin(c.futuros[1])-nowMin;
-        const ch2 = minToH(toMin(c.futuros[1])+Lx.tempoBase+ex2+Lx.caminhada);
-        alts.push(renderAltCard({ id:c.id, horario:c.futuros[1], detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'onibus' }));
-      }
+    let statusLine, urgLevel;
+    if (emTransito) {
+      const haMin = nowMin - partidaMin;
+      statusLine = `há ${haMin} min · a caminho do ponto`;
+      urgLevel = (chegaPontoMin - nowMin) <= 3 ? 'urgente' : 'breve';
     } else {
-      const Lx = LINHAS[c.id], ex2 = c.id===210?tr.e210:tr.e240;
-      const d2 = toMin(c.futuros[0])-nowMin;
-      const ch2 = minToH(toMin(c.futuros[0])+Lx.tempoBase+ex2+Lx.caminhada);
-      alts.push(renderAltCard({ id:c.id, horario:c.futuros[0], detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'onibus' }));
+      const diff = partidaMin - nowMin;
+      statusLine = faltaStr(diff, 'onibus');
+      urgLevel = diff <= 3 ? 'urgente' : diff <= 8 ? 'breve' : null;
     }
+
+    return renderLineCard({
+      id, cor:L.cor,
+      eyebrow: emTransito ? 'saiu da estação' : 'sai da estação',
+      bigTime: partida, statusLine, urgLevel,
+      rows: [{ label:'Chega no ponto perto de casa', time:chegaPonto }],
+      walkLabel: L.caminhada>0 ? `Chega em casa (${L.caminhada} min a pé)` : null,
+      walkTime:  L.caminhada>0 ? chegaCasa : null
+    });
   });
 
-  $('altsWrap').innerHTML = alts.length
-    ? `<div class="alts-title">Alternativas</div><div class="alts-list">${alts.join('')}</div>`
-    : '';
+  $('heroWrap').innerHTML = `<div class="linecards">${cardsHtml.join('')}</div>`;
+  $('timelineWrap').innerHTML = '';
+  $('altsWrap').innerHTML = '';
 }
 
-/* ---- Sentido: Casa → Estação ---- */
+/* ---- Sentido: Casa → Estação ----
+   Mesmo racional: o horário de saída da estação é o dado confiável.
+   Aqui calculamos quando sair de casa pra alcançar aquele ônibus,
+   e mostramos a chegada no ponto separada da chegada em casa.
+*/
 function renderModoCasa(day, h, nowMin, tr) {
-  const candidatos = [210, 240].map(id => {
-    const L     = LINHAS[id];
-    const lista = getLista(id, day);
-    const walk  = casaTotal(L);
-    const alc   = lista.filter(t => toMin(t)-nowMin >= walk);
-    return { id, alc, L, walk };
-  }).filter(c => c.alc.length > 0);
+  const candidatos = [210, 240].map(id => getRelevantPickup(id, day, nowMin, tr)).filter(Boolean);
 
   if (!candidatos.length) {
-    $('heroWrap').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-sec);font-size:var(--t-md)">Nenhum ônibus alcançável hoje.</div>`;
+    $('heroWrap').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🦇</div><div class="empty-state-text">Nenhum ônibus alcançável hoje.</div></div>`;
     $('timelineWrap').innerHTML = ''; $('altsWrap').innerHTML = '';
     return;
   }
 
-  const melhor = candidatos.reduce((a,b) => {
-    const La=a.L, Lb=b.L;
-    const eA=a.id===210?tr.e210:tr.e240, eB=b.id===210?tr.e210:tr.e240;
-    const chegaA = toMin(a.alc[0]) + La.tempoBase + eA + La.caminhada;
-    const chegaB = toMin(b.alc[0]) + Lb.tempoBase + eB + Lb.caminhada;
-    return chegaA <= chegaB ? a : b;
-  });
+  // Ordena por quem passa primeiro no ponto perto de casa
+  candidatos.sort((a, b) => a.chegaPontoMin - b.chegaPontoMin);
 
-  const L      = melhor.L;
-  const prox   = melhor.alc[0];
-  const extra  = melhor.id===210 ? tr.e210 : tr.e240;
+  const cardsHtml = candidatos.map(c => {
+    const { id, L, partida, partidaMin, chegaPontoMin, emTransito } = c;
+    const walk = casaTotal(L);
+    const sairAptoMin = chegaPontoMin - walk;
+    const chegaPonto = minToH(chegaPontoMin);
+    const sairApto = minToH(sairAptoMin);
 
-  // Etapas de caminhada, em MICRO: apto → rua → ponto
-  const chegaPontoMin = toMin(prox);                 // precisa estar no ponto quando o ônibus chega
-  const sairRuaMin    = chegaPontoMin - L.ruaPonto;   // sai da rua rumo ao ponto
-  const sairAptoMin   = sairRuaMin - L.aptoRua;       // sai do apartamento
-
-  const sairApto = minToH(sairAptoMin);
-  const sairRua  = minToH(sairRuaMin);
-  const diffSair = sairAptoMin - nowMin;
-
-  const tempo = L.tempoBase + extra + L.caminhada;
-  const chegadaCasa = minToH(toMin(prox) + tempo);
-  const acao    = faltaStr(diffSair, 'casa');
-  const urgente = diffSair <= 3;
-
-  const rows = [
-    `Saia do apto às <b>${sairApto}</b>`,
-    `Ônibus na estação às <b>${prox}</b>`,
-    `Chega em casa ≈<b>${chegadaCasa}</b>`
-  ];
-  if (extra > 0) rows.push(`<span style="color:var(--text-ter);font-size:var(--t-xs)">+${extra} min de trânsito · ${tr.label}</span>`);
-
-  // Barra de progresso: quanto da janela até a hora de sair já passou
-  const listaFull   = getLista(melhor.id, day);
-  const idxProx      = listaFull.indexOf(prox);
-  const prevBusT     = idxProx > 0 ? listaFull[idxProx-1] : null;
-  let barPct = null;
-  if (prevBusT) {
-    const prevSairMin = toMin(prevBusT) - melhor.walk;
-    const janela = sairAptoMin - prevSairMin;
-    if (janela > 0) barPct = Math.min(100, Math.max(0, Math.round((nowMin-prevSairMin)/janela*100)));
-  }
-
-  $('heroWrap').innerHTML = renderHero({ id:melhor.id, ponto:'Sua casa', acao, urgente, rows, cor:L.cor, barPct });
-
-  const now2 = new Date();
-  const horaAtual = `${pad2(now2.getHours())}:${pad2(now2.getMinutes())}`;
-  const tl = [{ icon:ICO_AGORA, label:'Agora', value:horaAtual, time:horaAtual, active:true }];
-
-  tl.push({ icon:ICO_CASA,  label:`Sair do apto · ${L.aptoRua} min a pé até a rua`, value:'Caminho até a rua', time:sairApto, active:diffSair<=0 && (nowMin<sairRuaMin) });
-  tl.push({ icon:ICO_ANDAR, label:`Da rua até o ponto · ${L.ruaPonto} min a pé`,    value:`Ponto da linha ${melhor.id}`, time:sairRua, active:false, sec:true });
-  tl.push({ icon:ICO_ONIBUS,label:'Ônibus parte da estação', value:`Linha ${melhor.id} · ${L.nome}`, time:prox, active:false });
-
-  if (L.caminhada > 0) {
-    const chegPonto = minToH(toMin(prox) + L.tempoBase + extra);
-    tl.push({ icon:ICO_ANDAR, label:`Desembarca · ${L.caminhada} min a pé`, value:L.destino, time:chegPonto, active:false, sec:true });
-  }
-  tl.push({ icon:ICO_CASA, label:'Chegada em casa', value:'Estimativa com trânsito', time:chegadaCasa, active:false });
-
-  $('timelineWrap').innerHTML = `<div class="timeline-title">Sua viagem completa</div>${renderTimeline(tl)}`;
-
-  const alts = [];
-  candidatos.forEach(c => {
-    const isHero = (c.id===melhor.id);
-    const startIdx = isHero ? 1 : 0;
-    const Lx = c.L, ex2 = c.id===210?tr.e210:tr.e240;
-    if (c.alc[startIdx]) {
-      const t2 = c.alc[startIdx];
-      const s2 = minToH(toMin(t2)-casaTotal(Lx));
-      const d2 = toMin(t2)-casaTotal(Lx)-nowMin;
-      const ch2 = minToH(toMin(t2)+Lx.tempoBase+ex2+Lx.caminhada);
-      alts.push(renderAltCard({ id:c.id, horario:`Sair ${s2} → ${t2}`, detalhe:`Chega em casa ≈${ch2}`, diff:d2, modo:'casa' }));
+    let statusLine, urgLevel;
+    if (emTransito) {
+      const haMin = nowMin - partidaMin;
+      statusLine = `há ${haMin} min a caminho · ainda dá tempo`;
+      urgLevel = (chegaPontoMin - nowMin) <= 3 ? 'urgente' : 'breve';
+    } else {
+      const diff = chegaPontoMin - nowMin;
+      statusLine = faltaStr(diff, 'onibus');
+      urgLevel = diff <= 3 ? 'urgente' : diff <= 8 ? 'breve' : null;
     }
+
+    return renderLineCard({
+      id, cor:L.cor,
+      eyebrow: emTransito ? 'a caminho do ponto' : 'ônibus chega no ponto',
+      bigTime: chegaPonto, statusLine, urgLevel,
+      rows: [
+        { label:'Saia de casa até', time:sairApto },
+        { label: emTransito ? 'Saiu da estação' : 'Sai da estação', time:partida }
+      ]
+    });
   });
 
-  $('altsWrap').innerHTML = alts.length
-    ? `<div class="alts-title">Outras opções</div><div class="alts-list">${alts.join('')}</div>`
-    : '';
+  $('heroWrap').innerHTML = `<div class="linecards">${cardsHtml.join('')}</div>`;
+  $('timelineWrap').innerHTML = '';
+  $('altsWrap').innerHTML = '';
 }
 
 /* ═══════════════════════════════════════
@@ -843,14 +1242,22 @@ function goPage(p) {
   $(`page-${p}`).classList.add('active');
   $(`tab-${p}`).classList.add('active');
   if (p==='horarios') renderGrade();
-  if (p==='linhas')   renderLinhas();
+  if (p==='linhas')   { renderLinhas(); initSimulador(); }
   window.scrollTo(0,0);
 }
 
 /* ═══════════════════════════════════════
    PAGE: HORÁRIOS
 ═══════════════════════════════════════ */
-let gradeLinha=210, gradeTurno='util';
+let gradeLinha=210, gradeTurno='util', gradeSentido='estacao';
+
+function setGradeSentido(s) {
+  gradeSentido = s;
+  $('hrBtnEst').classList.toggle('active',  s==='estacao');
+  $('hrBtnCasa').classList.toggle('active', s==='casa');
+  $('hrSentidoSlider').classList.toggle('right', s==='casa');
+  renderGrade();
+}
 
 function selecionarLinha(id) {
   gradeLinha = id;
@@ -866,6 +1273,12 @@ function selecionarTurno(t) {
 }
 
 function renderGrade() {
+  gradeSentido === 'casa' ? renderGradeCasa() : renderGradeEstacao();
+}
+
+/* Estação → Casa: grade original — chips só com a saída da estação
+   (o dado confiável único), sem nenhum cálculo extra em cima. */
+function renderGradeEstacao() {
   const now=new Date(), day=now.getDay(), nowMin=now.getHours()*60+now.getMinutes();
   const lista = LINHAS[gradeLinha].horarios[gradeTurno];
   const query = ($('searchInput').value||'').trim();
@@ -896,28 +1309,96 @@ function renderGrade() {
     </div>`).join('');
 }
 
+/* Casa → Estação: reaproveita a MESMA lista de saídas da estação (fonte da
+   verdade única), mas deriva pra cada partida o par "hora de sair de casa" +
+   "hora que o ônibus passa no ponto" — as duas juntas, lado a lado, como
+   pedido. O trânsito usado é o do horário de cada ônibus específico (não o
+   trânsito do momento atual), igual a lógica do simulador. Como as abas de
+   dia aqui são por turno (não por dia da semana exato), 'Dias úteis' assume
+   Seg–Qui como referência — pra conferir sexta-feira especificamente, use o
+   simulador na aba Linhas. */
+function renderGradeCasa() {
+  const now=new Date(), day=now.getDay(), nowMin=now.getHours()*60+now.getMinutes();
+  const L = LINHAS[gradeLinha];
+  const lista = L.horarios[gradeTurno];
+  const query = ($('searchInput').value||'').trim();
+  const isHoje = (gradeTurno==='util'&&day>=1&&day<=5)||(gradeTurno==='sab'&&day===6)||(gradeTurno==='dom'&&day===0);
+  const dayForCalc = gradeTurno==='util' ? 2 : gradeTurno==='sab' ? 6 : 0;
+  const walk = casaTotal(L);
+
+  const items = lista.map(t => {
+    const hh = parseInt(t);
+    const tr = getTransito(hh, dayForCalc);
+    const extra = gradeLinha===210 ? tr.e210 : tr.e240;
+    const chegaPontoMin = toMin(t) + L.tempoBase + extra;
+    const sairAptoMin = chegaPontoMin - walk;
+    return { t, chegaPontoMin, sairAptoMin, chegaPonto: minToH(chegaPontoMin), sairApto: minToH(sairAptoMin) };
+  });
+
+  const qNorm = query.replace(':','');
+  const filtered = query ? items.filter(it =>
+    it.sairApto.startsWith(query) || it.sairApto.replace(':','').startsWith(qNorm) ||
+    it.chegaPonto.startsWith(query) || it.chegaPonto.replace(':','').startsWith(qNorm) ||
+    it.t.startsWith(query)
+  ) : items;
+
+  if (query && !filtered.length) { $('grade').innerHTML=`<div class="no-results">Nenhum horário para "${query}".</div>`; return; }
+
+  const proxIdx = isHoje ? items.findIndex(it=>it.sairAptoMin>nowMin) : -1;
+
+  const grupos = { manha:[], tarde:[], noite:[] };
+  const nomes  = { manha:'Manhã · 04h–11h59', tarde:'Tarde · 12h–17h59', noite:'Noite · 18h–01h' };
+  filtered.forEach(it => {
+    const hhSair = Math.floor((((it.sairAptoMin%1440)+1440)%1440)/60);
+    grupos[hhSair<12?'manha':hhSair<18?'tarde':'noite'].push(it);
+  });
+
+  $('grade').innerHTML = ['manha','tarde','noite'].filter(g=>grupos[g].length).map(g => `
+    <div class="grade-periodo">
+      <div class="grade-periodo-title">${nomes[g]}</div>
+      <div class="casa-list">
+        ${grupos[g].map(it => {
+          const idxReal = items.indexOf(it);
+          let cls = '', style = '';
+          if (isHoje && !query) {
+            if (idxReal===proxIdx) style = `border-left-color:${L.cor}; background:${L.dim};`;
+            else if (it.sairAptoMin<=nowMin) cls='passado';
+          }
+          if (query) cls='highlight';
+          return `
+            <div class="casa-row ${cls}" style="${style}">
+              <div class="casa-left">
+                <div class="casa-lbl">Saia de casa</div>
+                <div class="casa-sair">${it.sairApto}</div>
+              </div>
+              <div class="casa-mid">${svgArrow}</div>
+              <div class="casa-right">
+                <div class="casa-lbl">Ônibus no ponto</div>
+                <div class="casa-ponto">${it.chegaPonto}</div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
 /* ═══════════════════════════════════════
    PAGE: LINHAS — dados ao vivo por sentido
 ═══════════════════════════════════════ */
 function proximoInfoLinha(id, day, nowMin, tr, direcao) {
   const L = LINHAS[id];
-  const lista = getLista(id, day);
   if (direcao === 'estacao') {
-    const futuros = lista.filter(t => toMin(t) > nowMin);
-    if (!futuros.length) return null;
-    const prox  = futuros[0];
-    const extra = id===210 ? tr.e210 : tr.e240;
-    const diff  = toMin(prox) - nowMin;
-    const chegada = minToH(toMin(prox) + L.tempoBase + extra + L.caminhada);
-    return { horario:prox, diff, sub:`Chega em casa ≈${chegada}` };
+    const o = getRelevantBus(id, day, nowMin, tr);
+    if (!o) return null;
+    const diff = o.emTransito ? 0 : (o.partidaMin - nowMin);
+    return { horario:o.partida, diff, sub:`Chega no ponto ≈${minToH(o.chegaPontoMin)}`, emTransito:o.emTransito };
   } else {
+    const c = getRelevantPickup(id, day, nowMin, tr);
+    if (!c) return null;
     const walk = casaTotal(L);
-    const alc  = lista.filter(t => toMin(t)-nowMin >= walk);
-    if (!alc.length) return null;
-    const prox    = alc[0];
-    const sairMin = toMin(prox) - walk;
-    const diff    = sairMin - nowMin;
-    return { horario:minToH(sairMin), diff, sub:`Ônibus às ${prox}` };
+    const sairAptoMin = c.chegaPontoMin - walk;
+    const diff = sairAptoMin - nowMin;
+    return { horario:minToH(c.chegaPontoMin), diff, sub:`Saia de casa até ${minToH(sairAptoMin)}`, emTransito:c.emTransito };
   }
 }
 
@@ -930,12 +1411,14 @@ function renderDirCard(id, day, nowMin, tr, direcao) {
     return `<div class="ldir-card"><div class="ldir-label">${icon}${label}</div><div class="ldir-empty">Sem horários hoje</div></div>`;
   }
   const modo = isEst ? 'onibus' : 'casa';
+  const pillTxt = info.emTransito ? 'A caminho' : faltaStr(info.diff, modo);
+  const pillCls = info.emTransito ? 'falta-breve' : faltaCls(info.diff);
   return `
     <div class="ldir-card">
       <div class="ldir-label">${icon}${label}</div>
       <div class="ldir-time">${info.horario}</div>
       <div class="ldir-sub">${info.sub}</div>
-      <div class="ldir-pill ${faltaCls(info.diff)}">${faltaStr(info.diff, modo)}</div>
+      <div class="ldir-pill ${pillCls}">${pillTxt}</div>
     </div>`;
 }
 
@@ -978,10 +1461,99 @@ function renderLinhas() {
         <div class="lcard-infos">
           <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg></div><div class="info-text"><b>Apto → rua:</b> ${L.aptoRua} min · <b>Rua → ponto:</b> ${L.ruaPonto} min</div></div>
           ${L.caminhada>0?`<div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M13 4a1 1 0 1 0 2 0M6 20l4-8 4 3 3-5"/></svg></div><div class="info-text"><b>${L.caminhada} min a pé</b> do ponto de desembarque até em casa</div></div>`:''}
-          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="info-text"><b>Pico manhã:</b> +${id===210?10:5} min · <b>Pico tarde:</b> +${id===210?8:4} min</div></div>
+          <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="info-text"><b>Pico manhã:</b> +${id===210?0:5} min · <b>Pico tarde:</b> +${id===210?8:4} min</div></div>
           <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="info-text"><b>Sextas:</b> +${id===210?5:3} a +${id===210?15:7} min estimado</div></div>
           <div class="info-row"><div class="info-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 18v2M17 18v2M3 11h18"/></svg></div><div class="info-text">Primeira: <b>${util[0]}</b> · Última: <b>${util[util.length-1]}</b> · Carros adaptados</div></div>
         </div>
+      </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   SIMULADOR DE HORÁRIO (página Linhas)
+   Pega um dia/hora escolhidos pelo usuário (não precisa ser "agora") e reusa
+   exatamente as mesmas fontes da verdade (getRelevantBus / getRelevantPickup)
+   que a Home usa — só que com `nowMin`/`day` vindos dos controles, não do
+   relógio real. Assim o resultado da simulação nunca diverge da lógica ao vivo.
+═══════════════════════════════════════ */
+let simSentido = 'estacao';
+let simDay = 2; // 2=Seg–Qui · 5=Sexta · 6=Sábado · 0=Dom/Feriado
+
+function setSimSentido(s) {
+  simSentido = s;
+  $('simBtnEst').classList.toggle('active',  s==='estacao');
+  $('simBtnCasa').classList.toggle('active', s==='casa');
+  $('simToggleSlider').classList.toggle('right', s==='casa');
+  renderSimulador();
+}
+
+function setSimDay(d) {
+  simDay = d;
+  document.querySelectorAll('#simDayTabs .sim-day-tab').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.day) === d);
+  });
+  renderSimulador();
+}
+
+function simUsarAgora() {
+  const now = new Date();
+  $('simTimeInput').value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  const realDay = now.getDay();
+  const mapped = realDay===0 ? 0 : realDay===6 ? 6 : realDay===5 ? 5 : 2;
+  setSimDay(mapped); // já chama renderSimulador()
+}
+
+function initSimulador() {
+  if (!$('simTimeInput').value) simUsarAgora();
+  else renderSimulador();
+}
+
+function renderSimulador() {
+  const timeVal = $('simTimeInput').value;
+  if (!timeVal) { $('simResults').innerHTML = `<div class="sim-empty-line">Escolha um horário pra simular.</div>`; return; }
+
+  const [hh, mm] = timeVal.split(':').map(Number);
+  const nowMin = hh*60 + mm;
+  const day = simDay;
+  const tr = getTransito(hh, day);
+
+  $('simResults').innerHTML = [210, 240].map(id => {
+    const L = LINHAS[id];
+    let inner;
+
+    if (simSentido === 'estacao') {
+      const o = getRelevantBus(id, day, nowMin, tr);
+      if (!o) {
+        inner = `<div class="sim-empty-line">Nenhum ônibus depois desse horário nesse dia.</div>`;
+      } else {
+        inner = `
+          <div class="lc-row"><span>Sai da estação</span><b>${o.partida}</b></div>
+          <div class="lc-row"><span>Chega no ponto perto de casa</span><b>${minToH(o.chegaPontoMin)}</b></div>
+          ${L.caminhada>0 ? `<div class="lc-walk"><span>🚶 Chega em casa (${L.caminhada} min a pé)</span><b>${minToH(o.chegaCasaMin)}</b></div>` : ''}
+        `;
+      }
+    } else {
+      const c = getRelevantPickup(id, day, nowMin, tr);
+      if (!c) {
+        inner = `<div class="sim-empty-line">Nenhum ônibus alcançável nesse dia/horário.</div>`;
+      } else {
+        const walk = casaTotal(L);
+        const sairAptoMin = c.chegaPontoMin - walk;
+        inner = `
+          <div class="lc-row"><span>Saia de casa até</span><b>${minToH(sairAptoMin)}</b></div>
+          <div class="lc-row"><span>Ônibus passa no ponto</span><b>${minToH(c.chegaPontoMin)}</b></div>
+          <div class="lc-row"><span>Saiu/sai da estação</span><b>${c.partida}</b></div>
+        `;
+      }
+    }
+
+    return `
+      <div class="sim-line-block">
+        <div class="sim-line-head">
+          <div class="sim-line-dot" style="background:${L.cor}"></div>
+          <div class="sim-line-name">Linha ${id} · ${L.nome}</div>
+        </div>
+        ${inner}
       </div>`;
   }).join('');
 }
